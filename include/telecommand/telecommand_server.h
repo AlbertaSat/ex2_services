@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015  Brendan Bruner
+ * Copyright (C) 2018  Brendan Bruner
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -14,37 +14,15 @@
  * bbruner@ualberta.ca
  */
 /**
- * @file driver_toolkit_base.c
+ * @file telecommand_server.h
  * @author Brendan Bruner
- * @date Jun 3, 2015
+ * @date April 6, 2018
  */
+#ifndef LIB_LIBCORE_INCLUDE_TELECOMMANDS_TELECOMMAND_SERVER_H_
+#define LIB_LIBCORE_INCLUDE_TELECOMMANDS_TELECOMMAND_SERVER_H_
 
 #include <driver_toolkit/driver_toolkit.h>
-#include <portable_types.h>
-#include <core_defines.h>
-#include <stdio.h>
 
-/**
- * @memberof driver_toolkit_t
- * @protected
- * @brief
- * 		Constructor.
- * @details
- * 		Constructor.
- */
-_Bool initialize_driver_toolkit( driver_toolkit_t* toolkit )
-{
-	DEV_ASSERT( toolkit );
+void start_telecommand_server( struct driver_toolkit_t* kit );
 
-  toolkit = pvPortMalloc(sizeof(driver_toolkit_t));
-  initialize_mock_up_ground_station_dynamic_sizes( toolkit->gs );
-
-	return true;
-}
-
-void destroy_driver_toolkit( driver_toolkit_t *kit )
-{
-	DEV_ASSERT( kit );
-
-	destroy_ground_station( kit->gs );
-}
+#endif /* LIB_LIBCORE_INCLUDE_TELECOMMANDS_TELECOMMAND_SERVER_H_ */

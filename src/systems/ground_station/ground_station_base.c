@@ -14,37 +14,18 @@
  * bbruner@ualberta.ca
  */
 /**
- * @file driver_toolkit_base.c
+ * @file ground_station_base.c
  * @author Brendan Bruner
  * @date Jun 3, 2015
  */
 
-#include <driver_toolkit/driver_toolkit.h>
+#include <systems/ground_station/ground_station.h>
 #include <portable_types.h>
-#include <core_defines.h>
-#include <stdio.h>
 
-/**
- * @memberof driver_toolkit_t
- * @protected
- * @brief
- * 		Constructor.
- * @details
- * 		Constructor.
- */
-_Bool initialize_driver_toolkit( driver_toolkit_t* toolkit )
+/********************************************************************************/
+/* Destructor																	*/
+/********************************************************************************/
+void destroy_ground_station( ground_station_t *gs )
 {
-	DEV_ASSERT( toolkit );
-
-  toolkit = pvPortMalloc(sizeof(driver_toolkit_t));
-  initialize_mock_up_ground_station_dynamic_sizes( toolkit->gs );
-
-	return true;
-}
-
-void destroy_driver_toolkit( driver_toolkit_t *kit )
-{
-	DEV_ASSERT( kit );
-
-	destroy_ground_station( kit->gs );
+	DEV_ASSERT( gs );
 }
