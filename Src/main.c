@@ -20,6 +20,7 @@ ar -rsc client_server.a *.o
 #include <unistd.h>
 
 #include "my_module.h"
+#include "scheduling_service.h"
 #include "services.h"
 #include "system.h"
 
@@ -64,6 +65,7 @@ int main(int argc, char **argv) {
   xTaskCreate((TaskFunction_t)server_loop, "SERVER THREAD", 2048, NULL, 1,
               NULL);
 
+  scheduling_service_init();
   vTaskStartScheduler();
 
   for (;;) {
