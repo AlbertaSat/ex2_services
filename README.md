@@ -1,14 +1,30 @@
 ## ex2 command handling demo
-This repo will server as a generic example of how a board on the Ex-Alta 2 satellite will distribute commands, and invoke a service. This same design will be used across the system
+This repo will include hardware agnostic/generic implementations of the ECSS services
+
+##### The design choices for this Repo are outlined in [this](https://docs.google.com/document/d/1lwsXxDpW5vtddGfX8-NMvWY7z-IfMumLlIke-QgDpBo/edit) document
+
+## File structure
+
+[file structure](https://github.com/AlbertaSat/ex2_command_handling_demo/tree/master/Docs/file_layout.pdf)
+
+## Design structure
+
+[design layout](https://github.com/AlbertaSat/ex2_command_handling_demo/tree/master/Docs/design_layout.pdf)
 
 ## To run locally
-* Clone [SatelliteSim](https://github.com/AlbertaSat/SatelliteSim/) into the same root directory as this repository (just to keep things simple) and follow the instructions in the SatelliteSim repo for building CSP
 
-* For now, this still references the [upsat services](https://gitlab.com/librespacefoundation/upsat/upsat-ecss-services) library for some header files, so clone that too
+[Install Docker](https://docs.docker.com/get-docker/) on your machine, and start it running in the background
 
-* Compile this code to a static lib (.a) file, the command should be similar to the following,
+In the root directory of this project, run:
+
 ```
-gcc *.c Platform/demo/*.c Platform/demo/hal/*.c Services/*.c -c -I . -I Platform/demo -I Platform/hal -I Services/ -I ../upsat-ecss-services/services/ -I ../SatelliteSim/Source/include/ -I ../SatelliteSim/Project/ -I ../SatelliteSim/libcsp/include/ -I ../SatelliteSim/Source/portable/GCC/POSIX/ -I ../SatelliteSim/libcsp/build/include/ -m32 -lpthread -std=c99 -lrt && ar -rsc client_server.a *.o
+docker build --tag satellite_sim:latest .
 ```
-* Link to this static library file in the SatelliteSim's Makefile (again, as described in the readme at that repo), and run
-```make clean && make all```
+To build the Docker image. This will take a few minutes (up to ~20 minutes): grab a coffee and chill ☕️. *This will need to be redone after every change to the code*, but subsequset builds are MUCH faster.
+
+Now run:
+
+```
+docker run --rm -it --network=host satellite_sim:latest
+```
+To begin the image. This will start the zmq proxy and run the satelliteSim with this project in it.
