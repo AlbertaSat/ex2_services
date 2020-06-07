@@ -11,11 +11,11 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
- /**
-  * @file service_utilities.c
-  * @author upSat, Andrew Rooney
-  * @date 2020-06-06
-  */
+/**
+ * @file service_utilities.c
+ * @author upSat, Andrew Rooney
+ * @date 2020-06-06
+ */
 
 #include "service_utilities.h"
 

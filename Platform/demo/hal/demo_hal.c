@@ -11,11 +11,11 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
- /**
-  * @file demo_hal.c
-  * @author Andrew Rooney
-  * @date 2020-06-06
-  */
+/**
+ * @file demo_hal.c
+ * @author Andrew Rooney
+ * @date 2020-06-06
+ */
 
 #include "demo_hal.h"
 

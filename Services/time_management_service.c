@@ -11,11 +11,11 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
- /**
-  * @file time_management_service.c
-  * @author Andrew Rooney
-  * @date 2020-06-06
-  */
+/**
+ * @file time_management_service.c
+ * @author Andrew Rooney
+ * @date 2020-06-06
+ */
 
 #include "time_management_service.h"
 
@@ -34,8 +34,8 @@
  * @brief
  * 		Handle incoming csp_packet_t
  * @details
- * 		Takes a csp packet destined for the time_management service, and Will
- *    handle the packet based on it's subservice type.
+ * 		Takes a csp packet destined for the time_management service, and
+ * Will handle the packet based on it's subservice type.
  * @param csp_packet_t *pkt
  *    Incoming CSP packet - we can be sure that this packet is valid and
  *    destined for this service.
@@ -46,7 +46,7 @@ SAT_returnState time_management_app(csp_packet_t *pkt) {
   uint8_t ser_subtype = (uint8_t)pkt->data[0];
   struct time_utc temp_time;
 
-  switch(ser_subtype) {
+  switch (ser_subtype) {
     case TM_TIME_SET_IN_UTC:
       printf("SET TIME\n");
       cnv8_32(&pkt->data[1], &temp_time.unix_timestamp);
@@ -70,7 +70,8 @@ SAT_returnState time_management_app(csp_packet_t *pkt) {
  * @brief
  * 		Set UTC time
  * @details
- * 		Makes a call the the platform implementation of the time handlers
+ * 		Makes a call the the platform implementation of the time
+ * handlers
  * @param struct time_utc utc
  *    a valid UTC timestamp to set the RTC to
  */

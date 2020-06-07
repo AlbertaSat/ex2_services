@@ -11,11 +11,11 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
- /**
-  * @file demo.c
-  * @author Andrew Rooney
-  * @date 2020-06-06
-  */
+/**
+ * @file demo.c
+ * @author Andrew Rooney
+ * @date 2020-06-06
+ */
 
 #include "demo.h"
 
@@ -52,8 +52,8 @@ static void time_management_app_route(void *parameters) {
  * @brief
  * 		Initialize service handling tasks, and queues
  * @details
- * 		Starts the FreeRTOS queueues and the tasks that wait on them for incoming
- *    CSP
+ * 		Starts the FreeRTOS queueues and the tasks that wait on them for
+ * incoming CSP
  * @return SAT_returnState
  * 		success report
  */

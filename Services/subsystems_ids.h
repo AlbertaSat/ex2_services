@@ -39,14 +39,14 @@
  */
 
 /* Space Segment */
-#define _OBC_APP_ID_    0
-#define _EPS_APP_ID_    1
-#define _ADCS_APP_ID_   2
-#define _COMMS_APP_ID_  3
+#define _OBC_APP_ID_ 0
+#define _EPS_APP_ID_ 1
+#define _ADCS_APP_ID_ 2
+#define _COMMS_APP_ID_ 3
 
 /* Ground Segment */
-#define _GND_APP_ID_    16
-#define _DEMO_APP_ID_   30
-#define _LAST_APP_ID_   31
+#define _GND_APP_ID_ 16
+#define _DEMO_APP_ID_ 30
+#define _LAST_APP_ID_ 31
 
 #endif /* SERVICES_SUBSYSTEMS_IDS_H */

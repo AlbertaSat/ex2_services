@@ -22,9 +22,9 @@
 #include "subsystems_ids.h"
 #include "system.h"
 
-#define MAX_APP_ID    32 // number of CSP nodes (5-bits)
-#define MAX_SERVICES  64 // number of CSP ports (6-bits)
-#define MAX_SUBTYPES  256 // an 8-bit integer
+#define MAX_APP_ID 32     // number of CSP nodes (5-bits)
+#define MAX_SERVICES 64   // number of CSP ports (6-bits)
+#define MAX_SUBTYPES 256  // an 8-bit integer
 
 typedef enum {
   OBC_APP_ID = _OBC_APP_ID_,
@@ -47,23 +47,22 @@ typedef enum {
 /* services types
  * Note: ports 0-7 are reserved by CSP
  */
-#define TC_VERIFICATION_SERVICE         8
-#define TC_HOUSEKEEPING_SERVICE         9
-#define TC_EVENT_SERVICE                10
-#define TC_FUNCTION_MANAGEMENT_SERVICE  11
-#define TC_TIME_MANAGEMENT_SERVICE      12
+#define TC_VERIFICATION_SERVICE 8
+#define TC_HOUSEKEEPING_SERVICE 9
+#define TC_EVENT_SERVICE 10
+#define TC_FUNCTION_MANAGEMENT_SERVICE 11
+#define TC_TIME_MANAGEMENT_SERVICE 12
 
 /* Subservice types */
 #define TM_TIME_SET_IN_UTC 0
 
 /* Utility definitions */
 union _cnv {
-    double cnvD;
-    float cnvF;
-    uint32_t cnv32;
-    uint16_t cnv16[4];
-    uint8_t cnv8[8];
+  double cnvD;
+  float cnvF;
+  uint32_t cnv32;
+  uint16_t cnv16[4];
+  uint8_t cnv8[8];
 };
-
 
 #endif /* SERVICES_H */

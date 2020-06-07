@@ -19,7 +19,6 @@ void server_loop(void *parameters);
 void vAssertCalled(unsigned long ulLine, const char *const pcFileName);
 SAT_returnState init_zmq();
 
-
 int main(int argc, char **argv) {
   fprintf(stdout, "-- starting command demo --");
   TC_TM_app_id my_address = DEMO_APP_ID;
@@ -65,8 +64,8 @@ int main(int argc, char **argv) {
  * @brief
  * 		initialize zmq interface, and configure the routing table
  * @details
- * 		start the localhost zmq server and add it to the default route with
- *    no VIA address
+ * 		start the localhost zmq server and add it to the default route
+ * with no VIA address
  */
 SAT_returnState init_zmq() {
   csp_iface_t *default_iface = NULL;
@@ -88,8 +87,8 @@ void vAssertCalled(unsigned long ulLine, const char *const pcFileName) {
  * @brief
  * 		main CSP server loop
  * @details
- * 		send incoming CSP packets to the appropriate service queues, otherwise
- *    pass it to the CSP service handler
+ * 		send incoming CSP packets to the appropriate service queues,
+ * otherwise pass it to the CSP service handler
  * @param void *parameters
  * 		not used
  */

@@ -19,8 +19,8 @@
 #include <stdint.h>
 #include "services.h"
 
-#define MIN_YEAR 1577836800 // 2020-01-01
-#define MAX_YEAR 1893456000 // 2030-01-01
+#define MIN_YEAR 1577836800  // 2020-01-01
+#define MAX_YEAR 1893456000  // 2030-01-01
 
 #define TIMESTAMP_ISOK(x) (x > MIN_YEAR && x < MAX_YEAR) ? 1 : 0
 
