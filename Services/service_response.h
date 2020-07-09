@@ -12,18 +12,9 @@
  * GNU General Public License for more details.
  */
 
-/**
-* This header file is unique to the system being implemented. It just includes
-* system specific headers, and defines system parameters.
-*/
+#ifndef SERVICE_RESPONSE_H
+#define SERVICE_RESPONSE_H
 
-#ifndef __SYSTEM_H
-#define __SYSTEM_H
+void service_response_task(void *param);
 
-#include "demo.h"
-
-#define SYSTEM_APP_ID _DEMO_APP_ID_
-#define USE_LOCALHOST  // Define for local development, add other options when
-                       // available
-
-#endif /* SYSTEM_H */
+#endif /* SERVICE_RESPONSE_H */

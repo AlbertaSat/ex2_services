@@ -1,5 +1,19 @@
-#ifndef __HOUSEKEEPING_SERVICE_H
-#define __HOUSEKEEPING_SERVICE_H
+/*
+ * Copyright (C) 2015  University of Alberta
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+#ifndef HOUSEKEEPING_SERVICE_H
+#define HOUSEKEEPING_SERVICE_H
 
 #include "services.h"
 
@@ -13,11 +27,10 @@
 
 extern unsigned int count;
 
-//extern CSP_DEFINE_TASK(hk_app);
+/*Define hk service tasks*/
 SAT_returnState hk_service_app(csp_packet_t *pkt);
-csp_packet_t* tc_hk_para_rep(csp_packet_t *packet);
-//SAT_returnState tm_hk_para_rep(uint32_t timeout);
-csp_packet_t* hk_para_rep(void);
+SAT_returnState tc_hk_param_rep(csp_packet_t *packet);
+csp_packet_t* hk_param_rep();
 
 /*hk data sample*/
 typedef enum {
@@ -31,4 +44,4 @@ typedef enum {
   EPS_SIZE
 }data_sample;
 
-#endif
+#endif /* HOUSEKEEPING_SERVICE_H */
