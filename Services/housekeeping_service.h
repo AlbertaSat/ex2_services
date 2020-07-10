@@ -15,6 +15,7 @@
 #ifndef HOUSEKEEPING_SERVICE_H
 #define HOUSEKEEPING_SERVICE_H
 
+#include <csp/csp.h>
 #include "services.h"
 
 /* Housekeeping service address & port*/
@@ -42,6 +43,6 @@ typedef enum {
   EPS_TEMPERATURE_STATE,
   EPS_ALERT,
   EPS_SIZE
-}data_sample;
+} data_sample;
 
 #endif /* HOUSEKEEPING_SERVICE_H */

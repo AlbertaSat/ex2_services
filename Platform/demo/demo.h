@@ -21,6 +21,13 @@
 #include "queue.h"
 #include "services.h"
 
+// gcc Src/*.c Src/demo/*.c -c -I Inc/ -I ../upsat-ecss-services/services/
+// -I Src/ -I Src/demo -I ../ex2_on_board_computer/Source/include/ -I
+// ../ex2_on_board_computer/Project/ -I ../ex2_on_board_computer/libcsp/include/
+// -I ../ex2_on_board_computer/Source/portable/GCC/POSIX/ -I
+// ../ex2_on_board_computer/libcsp/build/include/ -m32 -lpthread -std=c99 -lrt
+// && ar -rsc client_server.a *.o^C
+
 extern unsigned int sent_count;
 
 #define NORMAL_TICKS_TO_WAIT 1
@@ -32,9 +39,8 @@ extern unsigned int sent_count;
 // Define all the services that the module implements
 // Defined here are the services implemented by this platform
 typedef struct {
-  xQueueHandle response_queue, // Each platform must define a response queue
-  hk_app_queue,
-  time_management_app_queue;
+  xQueueHandle response_queue,  // Each platform must define a response queue
+      hk_app_queue, time_management_app_queue;
 } Service_Queues_t;
 
 SAT_returnState start_service_handlers();

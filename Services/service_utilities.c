@@ -17,10 +17,11 @@
  * @date 2020-06-06
  */
 
+#include "service_utilities.h"
+
 #include <stdarg.h>
 #include <stdio.h>
 
-#include "service_utilities.h"
 #include "time_management_service.h"
 
 void ex2_log(const char *format, ...) {

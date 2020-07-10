@@ -41,12 +41,13 @@ typedef enum {
 
 typedef enum {
   SATR_PKT_ILLEGAL_APPID = 0,
-  SATR_OK = 1,
-  SATR_ERROR = 2,
+  SATR_PKT_ILLEGAL_SUBSERVICE,
+  SATR_OK,
+  SATR_ERROR,
   SATR_RETURN_FROM_TASK,
   SATR_BUFFER_ERR,
   /*LAST*/
-  SATR_LAST = 56
+  SATR_LAST
 } SAT_returnState;
 
 /* services types & subtypes
@@ -55,6 +56,7 @@ typedef enum {
 #define TC_VERIFICATION_SERVICE 8
 
 #define TC_HOUSEKEEPING_SERVICE 9
+<<<<<<< HEAD
 typedef enum {
   TM_HK_PARAMETERS_REPORT = 0
 } Housekeeping_Subtype;
@@ -65,6 +67,16 @@ typedef enum {
 typedef enum {
   SET_TIME = 0
 } Time_Management_Subtype;
+=======
+typedef enum { TM_HK_PARAMETERS_REPORT = 0 } Housekeeping_Subtype;
+
+#define TC_EVENT_SERVICE 10
+
+#define TC_FUNCTION_MANAGEMENT_SERVICE 11
+
+#define TC_TIME_MANAGEMENT_SERVICE 12
+typedef enum { SET_TIME = 0 } Time_Management_Subtype;
+>>>>>>> 5f11d86043f55fc3286cbb192398a1cd88ee7f83
 
 #define TM_HK_PARAMETERS_REPORT 0
 
@@ -78,5 +90,8 @@ union _cnv {
 };
 
 #endif /* SERVICES_H */
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> 5f11d86043f55fc3286cbb192398a1cd88ee7f83

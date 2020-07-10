@@ -13,7 +13,7 @@
  */
 /**
  * @file main.c
- * @author Andrew Rooney, Haoran Qi, Yuan Wang
+ * @author Andrew Rooney, Haoran Qi
  * @date 2020-06-06
  */
 
@@ -21,6 +21,7 @@
 #include <csp/csp.h>
 #include <csp/interfaces/csp_if_zmqhub.h>
 #include <fcntl.h>
+#include <service_utilities.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,6 +29,7 @@
 #include <task.h>
 #include <unistd.h>
 
+#include "service_response.h"
 #include "services.h"
 #include "service_response.h"
 #include "system.h"
@@ -97,7 +99,6 @@ int main(int argc, char **argv) {
   return 0;
 }
 
-
 /**
  * @brief
  * 		initialize zmq interface, and configure the routing table
@@ -105,7 +106,7 @@ int main(int argc, char **argv) {
  * 		start the localhost zmq server and add it to the default route
  * with no VIA address
  */
-SAT_returnState init_zmq() {
+static inline SAT_returnState init_zmq() {
   csp_iface_t *default_iface = NULL;
   int error =
       csp_zmqhub_init(csp_get_address(), "localhost", 0, &default_iface);
@@ -120,7 +121,6 @@ SAT_returnState init_zmq() {
 void vAssertCalled(unsigned long ulLine, const char *const pcFileName) {
   ex2_log("error line: %lu in file: %s", ulLine, pcFileName);
 }
-
 
 /**
  * @brief
@@ -156,9 +156,9 @@ void server_loop(void *parameters) {
         case TC_HOUSEKEEPING_SERVICE:
           err = xQueueSendToBack(service_queues.hk_app_queue, packet,
                                  NORMAL_TICKS_TO_WAIT);
-	        if (err != pdPASS) {
-	          ex2_log("FAILED TO QUEUE MESSAGE");
-	        }
+          if (err != pdPASS) {
+            ex2_log("FAILED TO QUEUE MESSAGE");
+          }
           csp_buffer_free(packet);
           break;
 

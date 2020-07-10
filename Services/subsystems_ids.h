@@ -21,7 +21,7 @@
 /**
  * Each subsystem has a unique APP ID that is used to route ECSS packets
  * within the different satellite subsystems.
-  * The general structure of the nodes is desribed by CSP thus,
+ * The general structure of the nodes is desribed by CSP thus,
  +-------+-------+-------+-------+       bus: I2C, CAN, KISS
 |       |       |       |       |
 +---+   +---+   +---+   +---+   +---+
@@ -49,4 +49,4 @@
 #define _DEMO_APP_ID_ 30
 #define _LAST_APP_ID_ 31
 
-#endif /* SERVICES_SUBSYSTEMS_IDS_H_ */
+#endif /* SERVICES_SUBSYSTEMS_IDS_H */

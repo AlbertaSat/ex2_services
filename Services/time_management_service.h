@@ -24,18 +24,8 @@
 
 #define TIMESTAMP_ISOK(x) (x > MIN_YEAR && x < MAX_YEAR) ? 1 : 0
 
-
-#define MIN_QB_SECS 2678400
-#define MAX_QB_SECS 662774400
-
 struct time_utc {
   uint32_t unix_timestamp;
-};
-
-struct time_keeping {
-  uint32_t epoch;
-  uint32_t elapsed;
-  struct time_utc utc;
 };
 
 void set_time_UTC(struct time_utc utc);

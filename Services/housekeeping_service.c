@@ -13,18 +13,18 @@
  */
 /**
  * @file housekeeping_service.c
- * @author Haoran Qi, Andrew Rooney, Yuan Wang
+ * @author Haoran Qi, Andrew Rooney
  * @date 2020-07-07
  */
+#include "housekeeping_service.h"
 
 #include <FreeRTOS.h>
-#include <csp/csp.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <stdlib.h>
 
-#include "housekeeping_service.h"
+#include "service_response.h"
 #include "service_utilities.h"
 #include "services.h"
 #include "system.h"
@@ -55,8 +55,7 @@ SAT_returnState hk_service_app(csp_packet_t *pkt) {
       return SATR_ERROR;
   }
 
-	csp_buffer_free(pkt);
-	return SATR_OK;
+  return SATR_OK;
 }
 
 /* NB: Basically hk_para_rep will be wrriten in the hardware/platform file.*/

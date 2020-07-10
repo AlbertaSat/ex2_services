@@ -25,13 +25,10 @@
 #include "system.h"
 #include "task.h"
 #include "time_management_service.h"
-#include "services.h"
-#include "housekeeping_service.h"
-#include "demo.h"
 
 extern Service_Queues_t service_queues;
 /*create a variable to record # of packets sent to ground*/
-unsigned int sent_count =0;
+unsigned int sent_count = 0;
 
 /**
  * @brief
@@ -41,7 +38,7 @@ unsigned int sent_count =0;
  * @param void *param
  * 		not used
  */
-static void housekeeping_app_route(void *parameters)  {
+static void housekeeping_app_route(void *parameters) {
   csp_packet_t packet;
   for (;;) {
     if (xQueueReceive(service_queues.hk_app_queue, &packet,
@@ -82,7 +79,6 @@ static void time_management_app_route(void *parameters) {
  * @return SAT_returnState
  * 		success report
  */
-
 SAT_returnState start_service_handlers() {
   /**
    * Create the queues & tasks for each service implemented by this module
@@ -90,7 +86,7 @@ SAT_returnState start_service_handlers() {
   if (!(service_queues.time_management_app_queue =
             xQueueCreate((unsigned portBASE_TYPE)SERVICE_QUEUE_LEN,
                          (unsigned portBASE_TYPE)CSP_PKT_QUEUE_SIZE))) {
-    ex2_log("FAILED TO CREATE time_management_app_queue\n");
+    ex2_log("FAILED TO CREATE time_management_app_queue");
     return SATR_ERROR;
   };
 
