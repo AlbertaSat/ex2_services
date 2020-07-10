@@ -56,18 +56,6 @@ typedef enum {
 #define TC_VERIFICATION_SERVICE 8
 
 #define TC_HOUSEKEEPING_SERVICE 9
-<<<<<<< HEAD
-typedef enum {
-  TM_HK_PARAMETERS_REPORT = 0
-} Housekeeping_Subtype;
-
-#define TC_EVENT_SERVICE 10
-#define TC_FUNCTION_MANAGEMENT_SERVICE 11
-#define TC_TIME_MANAGEMENT_SERVICE 12
-typedef enum {
-  SET_TIME = 0
-} Time_Management_Subtype;
-=======
 typedef enum { TM_HK_PARAMETERS_REPORT = 0 } Housekeeping_Subtype;
 
 #define TC_EVENT_SERVICE 10
@@ -76,7 +64,6 @@ typedef enum { TM_HK_PARAMETERS_REPORT = 0 } Housekeeping_Subtype;
 
 #define TC_TIME_MANAGEMENT_SERVICE 12
 typedef enum { SET_TIME = 0 } Time_Management_Subtype;
->>>>>>> 5f11d86043f55fc3286cbb192398a1cd88ee7f83
 
 #define TM_HK_PARAMETERS_REPORT 0
 
@@ -90,8 +77,3 @@ union _cnv {
 };
 
 #endif /* SERVICES_H */
-<<<<<<< HEAD
-
-
-=======
->>>>>>> 5f11d86043f55fc3286cbb192398a1cd88ee7f83

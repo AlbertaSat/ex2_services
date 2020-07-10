@@ -51,8 +51,7 @@ SAT_returnState hk_service_app(csp_packet_t *pkt) {
 
     default:
       csp_log_error("HK SERVICE NOT FOUND SUBTASK");
-      csp_buffer_free(pkt);
-      return SATR_ERROR;
+      return SATR_PKT_ILLEGAL_SUBSERVICE;
   }
 
   return SATR_OK;
@@ -60,37 +59,37 @@ SAT_returnState hk_service_app(csp_packet_t *pkt) {
 
 /* NB: Basically hk_para_rep will be wrriten in the hardware/platform file.*/
 
-csp_packet_t* hk_param_rep(){
-	csp_packet_t *packet = csp_buffer_get(100);
-	if (packet == NULL) {
-		/* Could not get buffer element */
-		ex2_log("Failed to get CSP buffer");
-		csp_buffer_free(packet);
-		return NULL;
-	}
-// 	snex2_log((char *) packet->data[1], csp_buffer_data_size(), "HK
-//  		   Data Sample -- EPS CRRENT: 23mA", ++count);	
-	packet->data[1] = 16;
-	++count;
-	//tranfer the task from TC to TM for enabling ground response task
-	packet->data[0] = TM_HK_PARAMETERS_REPORT;
-	packet->length = (strlen((char *) packet->data) + 1);
+csp_packet_t *hk_param_rep() {
+  csp_packet_t *packet = csp_buffer_get(100);
+  if (packet == NULL) {
+    /* Could not get buffer element */
+    ex2_log("Failed to get CSP buffer");
+    csp_buffer_free(packet);
+    return NULL;
+  }
+  packet->data[1] = 16;
+  ++count;
+  // tranfer the task from TC to TM for enabling ground response task
+  packet->data[0] = (char)TM_HK_PARAMETERS_REPORT;
+  packet->length = (strlen((char *)packet->data) + 1);
 
-	return packet;
+  return packet;
 }
 
-SAT_returnState tc_hk_param_rep(csp_packet_t* packet){
-  //execute #25 subtask: parameter report, collecting data from platform
-  	packet = hk_param_rep();
-    if(packet == NULL){
-    	ex2_log("HOUSEKEEPING SERVICE REPORT: DATA COLLECTING FAILED");
-    	return SATR_ERROR;
-  	}
-    if (xQueueSendToBack(service_queues.response_queue, packet, 
-						 NORMAL_TICKS_TO_WAIT) != pdPASS) {
-    	return SATR_ERROR;
-  	}
+SAT_returnState tc_hk_param_rep() {
+  // execute #25 subtask: parameter report, collecting data from platform
+  csp_packet_t *packet = hk_param_rep();
 
-    return SATR_OK;
+  if (packet == NULL) {
+    csp_log_info(
+        "HOUSEKEEPING SERVICE REPORT: DATA COLLECTING "
+        "FAILED") return SATR_ERROR;
+  }
+
+  if (xQueueSendToBack(service_queues.response_queue, packet,
+                       NORMAL_TICKS_TO_WAIT) != pdPASS) {
+    return SATR_ERROR;
+  }
+
+  return SATR_OK;
 }
-

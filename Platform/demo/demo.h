@@ -44,6 +44,7 @@ typedef struct {
 } Service_Queues_t;
 
 SAT_returnState start_service_handlers();
+
 SAT_returnState ground_response_task();
 
 #endif

@@ -79,15 +79,13 @@ int main(int argc, char **argv) {
   // implement other interfaces
   #endif
 
-  if ((xTaskCreate((TaskFunction_t)server_loop, "SERVER THREAD", 2048, NULL, 1,
-              NULL)) != pdPASS) {
-    ex2_log("FAILED TO CREATE SERVER THREAD\n");
+  if (xTaskCreate((TaskFunction_t)server_loop, "SERVER THREAD", 2048, NULL, 1,
+              NULL) != pdPASS) {
     return -1;
   }
 
-  if ((xTaskCreate((TaskFunction_t)service_response_task, "RESPONSE SERVER", 2048, NULL, 1,
-              NULL)) != pdPASS) {
-    ex2_log("FAILED TO CREATE RESPONSE SERVER THREAD\n");
+  if (xTaskCreate((TaskFunction_t)service_response_task, "RESPONSE SERVER", 2048, NULL, 1,
+              NULL) != pdPASS) {
     return -1;
   }
 

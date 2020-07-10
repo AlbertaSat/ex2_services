@@ -17,9 +17,12 @@
  * @date 2020-06-06
  */
 
+#include "demo.h"
+
 #include <FreeRTOS.h>
 #include <stdio.h>
 
+#include "housekeeping_service.h"
 #include "service_utilities.h"
 #include "services.h"
 #include "system.h"
@@ -84,28 +87,28 @@ SAT_returnState start_service_handlers() {
    * Create the queues & tasks for each service implemented by this module
    */
   if (!(service_queues.time_management_app_queue =
-            xQueueCreate((unsigned portBASE_TYPE)SERVICE_QUEUE_LEN,
-                         (unsigned portBASE_TYPE)CSP_PKT_QUEUE_SIZE))) {
+          xQueueCreate((unsigned portBASE_TYPE)SERVICE_QUEUE_LEN,
+                        (unsigned portBASE_TYPE)CSP_PKT_QUEUE_SIZE))) {
     ex2_log("FAILED TO CREATE time_management_app_queue");
     return SATR_ERROR;
   };
 
   if (!(service_queues.hk_app_queue =
-             xQueueCreate((unsigned portBASE_TYPE)SERVICE_QUEUE_LEN,
-                          (unsigned portBASE_TYPE)CSP_PKT_QUEUE_SIZE))) {
+            xQueueCreate((unsigned portBASE_TYPE)SERVICE_QUEUE_LEN,
+                        (unsigned portBASE_TYPE)CSP_PKT_QUEUE_SIZE))) {
     ex2_log("FAILED TO CREATE hk_app_queue\n");
     return SATR_ERROR;
   };
 
-  if ((xTaskCreate((TaskFunction_t)time_management_app_route, "time_management_app",
-              2048, NULL, NORMAL_SERVICE_PRIO, NULL))!= pdPASS) {
-    ex2_log("FAILED TO CREATE time_management TASK\n");
+  if (xTaskCreate((TaskFunction_t)housekeeping_app_route,
+                    "housekeeping_app_route", 2048, NULL, NORMAL_SERVICE_PRIO,
+                    NULL) == pdPASS) {
     return SATR_ERROR;
   };
 
-  if ((xTaskCreate((TaskFunction_t)housekeeping_app_route, "housekeeping_app_route",
-              2048, NULL, NORMAL_SERVICE_PRIO, NULL)) != pdPASS) {
-    ex2_log("FAILED TO CREATE HK APP TASK\n");
+  if (xTaskCreate((TaskFunction_t)time_management_app_route,
+                    "time_management_app", 2048, NULL, NORMAL_SERVICE_PRIO,
+                    NULL) != pdPASS) {
     return SATR_ERROR;
   };
   
