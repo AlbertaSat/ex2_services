@@ -32,18 +32,20 @@ extern service_queues_t service_queues;
  * @brief
  * 		FreeRTOS task wakes up to service time_management request
  * @details
+ *    This task taskes ownwership of the incoming packet -- must free it.
  * 		Will pass the incoming packet to the application code
  * @param void *param
  * 		not used
  */
 static void time_management_app_route(void *parameters) {
-  csp_packet_t packet;
+  csp_packet_t *packet;
   for (;;) {
     if (xQueueReceive(service_queues.time_management_app_queue, &packet,
                       NORMAL_TICKS_TO_WAIT) == pdPASS) {
       printf("Time time_management_service SERVICE RX: %d, ID: %d\n",
-             packet.data[0], packet.id);
-      time_management_app(&packet);
+             packet->data[0], packet->id);
+      time_management_app(packet);
+      csp_buffer_free(packet);
     }
   }
 }

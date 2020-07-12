@@ -24,7 +24,7 @@
 #define NORMAL_TICKS_TO_WAIT 1
 #define NORMAL_SERVICE_PRIO 5
 #define NORMAL_QUEUE_LEN 3
-#define NORMAL_QUEUE_SIZE 256
+#define NORMAL_QUEUE_SIZE sizeof(csp_packet_t*)
 
 // Define all the services that the module implements
 typedef struct {
