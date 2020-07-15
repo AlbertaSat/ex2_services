@@ -11,6 +11,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
+ /**
+  * @file services.h
+  * @author upSat, Andrew Rooney, Thomas Ganley
+  * @date 2020-07-14
+  */
+
 
 #ifndef SERVICES_H
 #define SERVICES_H
@@ -19,6 +25,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <csp/csp.h>
 #include "subsystems_ids.h"
 #include "system.h"
 
@@ -40,11 +47,14 @@ typedef enum {
   SATR_PKT_ILLEGAL_APPID = 0,
   SATR_OK = 1,
   SATR_ERROR = 2,
+  /* Scheduling Service Error State Codes */
+  SATR_SCHS_FULL = 16,
+  SATR_SCHS_INTRL_LGC_ERR = 27,
   /*LAST*/
   SATR_LAST = 56
 } SAT_returnState;
 
-/* services types
+/* Service types
  * Note: ports 0-7 are reserved by CSP
  */
 #define TC_VERIFICATION_SERVICE 8
@@ -52,9 +62,27 @@ typedef enum {
 #define TC_EVENT_SERVICE 10
 #define TC_FUNCTION_MANAGEMENT_SERVICE 11
 #define TC_TIME_MANAGEMENT_SERVICE 12
+#define TC_SCHEDULING_SERVICE 13
 
 /* Subservice types */
 #define TM_TIME_SET_IN_UTC 0
+
+/*SCHEDULING SERVICE*/
+#define SCHS_ENABLE_RELEASE             1 /*subservice 01, Telecommand to enable the release of telecommands from schedule pool*/
+#define SCHS_DISABLE_RELEASE            2 /*subservice 02, Telecommand to disable the release of telecommands from schedule pool*/
+#define SCHS_RESET_SCH                  3 /*subservice 03, Telecommand to reset the schedule pool*/
+#define SCHS_INSERT_TC_IN_SCH           4 /*subservice 04, Telecommand to insert a tc_tm_pkt in schedule pool*/
+#define SCHS_DELETE_TC_FROM_SCH         5 /*subservice 05, Telecommand to delete a tc_tm_pkt from schedule pool*/
+#define SCHS_TIME_SHIFT_SEL_TC          6 /*subservice 06, Telecommand to time shift (+/-) selected active schedule packet*/
+#define SCHS_TIME_SHIFT_ALL_TCS         7 /*subservice 07, Telecommand to time shift (+/-) all schedule packets*/
+#define SCHS_DETAILED_SCH_REPORT        8 /*subservice 08, Telemetry response (to subservice 10)*/
+#define SCHS_SIMPLE_SCH_REPORT          9 /*subservice 09, Telemetry response (to subservice 11)*/
+#define SCHS_REPORT_SCH_DETAILED        10 /*subservice 10, Telecommand to report schedules in detailed form*/
+#define SCHS_REPORT_SCH_SUMMARY         11 /*subservice 11, Telecommand to report schedules in summary form*/
+#define SCHS_LOAD_SCHEDULES             12 /*subservice 12, Telecommand to load schedules from perm storage*/
+#define SCHS_SAVE_SCHEDULES             13 /*subservice 13, Telecommand to save schedules on perm storage*/
+
+
 
 /* Utility definitions */
 union _cnv {
