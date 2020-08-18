@@ -22,12 +22,12 @@
 
   #include <stdlib.h>
   #include "service_utilities.h"
-  #include "time_management_service.h"
+  //#include "time_management_service.h"
   #include "services.h"
   // #include "pkt_pool.h"
   // #include "sysview.h"
 
-  #define SC_MAX_STORED_SCHEDULES 15
+  #define SC_MAX_STORED_SCHEDULES 15 // Arbitrary
 
   typedef enum {
     ABSOLUTE = 0,
@@ -80,7 +80,7 @@
            * Timeout execution is only set if telecommand sets interlocks, so for our
            * current implementation will be always 0 (zero)
            */
-      uint32_t timeout;
+       uint32_t timeout;
 
           /* The actual telecommand packet to be scheduled and executed
            *
@@ -149,32 +149,32 @@
   SAT_returnState scheduling_app(csp_packet_t* spacket);
 
   /* Execute schedule */
-  SAT_returnState cross_schedules();
+  SAT_returnState scheduling_release_expired();
 
   /* Directly insert scheduling packet */
-  SAT_returnState scheduling_insert_api( uint8_t posit, SC_pkt theSchpck );
+  SAT_returnState scheduling_hard_insert_element( uint8_t posit, SC_pkt theSchpck );
 
   /* Enable/Disable the execution of schedules */
-  SAT_returnState toggle_apid_schedule_release( uint8_t subtype, uint8_t apid );
+  SAT_returnState scheduling_toggle_apid_release( uint8_t subtype, uint8_t apid );
 
   /* Removing schedules */
-  SAT_returnState reset_schedule_pool();
+  SAT_returnState scheduling_reset_pool();
 
-  SAT_returnState remove_schedule(uint8_t apid, uint16_t seqc );
+  SAT_returnState scheduling_remove_element(uint8_t apid, uint16_t seqc );
 
   /* Extracting Schedule packet from TC */
   SC_pkt* find_schedule_pos();
 
-  SAT_returnState parse_sch_packet( SC_pkt *sc_pkt, csp_packet_t *tc_pkt );
+  SAT_returnState scheduling_parse_and_extract( SC_pkt *sc_pkt, csp_packet_t *tc_pkt );
 
-  uint8_t check_existing(uint8_t apid, uint8_t seqc);
+  uint8_t check_existing_sch(uint8_t apid, uint8_t seqc);
 
-  SAT_returnState copy_inner_tc(const uint8_t *buf, csp_packet_t *pkt, const uint16_t size);
+  SAT_returnState scheduling_copy_inner_tc(const uint8_t *buf, csp_packet_t *pkt, const uint16_t size);
 
   /* Time Shifting */
-  SAT_returnState time_shift_all_tcs(uint8_t *time_v);
+  SAT_returnState scheduling_time_shift_all(uint8_t *time_v);
 
-  SAT_returnState time_shift_sel_schedule(uint8_t *data_v);
+  SAT_returnState scheduling_time_shift_sel(uint8_t *data_v);
 
   /* Creating reports */
   SAT_returnState scheduling_service_report_summary(csp_packet_t *pkt, TC_TM_app_id dest_id);

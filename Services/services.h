@@ -26,12 +26,15 @@
 #include <stdio.h>
 #include <string.h>
 #include <csp/csp.h>
+#include <unistd.h>
 #include "subsystems_ids.h"
 #include "system.h"
 
 #define MAX_APP_ID 32     // number of CSP nodes (5-bits)
 #define MAX_SERVICES 64   // number of CSP ports (6-bits)
 #define MAX_SUBTYPES 256  // an 8-bit integer
+
+#define MAX_PKT_LEN 210 // TODO: What is our max packet length?
 
 typedef enum {
   OBC_APP_ID = _OBC_APP_ID_,
@@ -70,11 +73,11 @@ typedef enum {
 /*SCHEDULING SERVICE*/
 #define SCHS_ENABLE_RELEASE             1 /*subservice 01, Telecommand to enable the release of telecommands from schedule pool*/
 #define SCHS_DISABLE_RELEASE            2 /*subservice 02, Telecommand to disable the release of telecommands from schedule pool*/
-#define SCHS_RESET_SCH                  3 /*subservice 03, Telecommand to reset the schedule pool*/
-#define SCHS_INSERT_TC_IN_SCH           4 /*subservice 04, Telecommand to insert a tc_tm_pkt in schedule pool*/
-#define SCHS_DELETE_TC_FROM_SCH         5 /*subservice 05, Telecommand to delete a tc_tm_pkt from schedule pool*/
-#define SCHS_TIME_SHIFT_SEL_TC          6 /*subservice 06, Telecommand to time shift (+/-) selected active schedule packet*/
-#define SCHS_TIME_SHIFT_ALL_TCS         7 /*subservice 07, Telecommand to time shift (+/-) all schedule packets*/
+#define SCHS_RESET_POOL                 3 /*subservice 03, Telecommand to reset the schedule pool*/
+#define SCHS_INSERT_ELEMENT             4 /*subservice 04, Telecommand to insert a tc_tm_pkt in schedule pool*/
+#define SCHS_REMOVE_ELEMENT             5 /*subservice 05, Telecommand to delete a tc_tm_pkt from schedule pool*/
+#define SCHS_TIME_SHIFT_SEL             6 /*subservice 06, Telecommand to time shift (+/-) selected active schedule packet*/
+#define SCHS_TIME_SHIFT_ALL             7 /*subservice 07, Telecommand to time shift (+/-) all schedule packets*/
 #define SCHS_DETAILED_SCH_REPORT        8 /*subservice 08, Telemetry response (to subservice 10)*/
 #define SCHS_SIMPLE_SCH_REPORT          9 /*subservice 09, Telemetry response (to subservice 11)*/
 #define SCHS_REPORT_SCH_DETAILED        10 /*subservice 10, Telecommand to report schedules in detailed form*/
