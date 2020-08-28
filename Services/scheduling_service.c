@@ -209,6 +209,7 @@
     * @details
     * 		Unique entry point to service
     *     TODO: When would this be used?
+    *     TODO: Use CSP
     * @param posit
     * 		Position in the schedule to write to
     * @param theSchpck
@@ -221,9 +222,6 @@
       sch_mem_pool.sc_mem_array[posit].app_id = theSchpck.app_id;
       sch_mem_pool.sc_mem_array[posit].assmnt_type = theSchpck.assmnt_type;
       sch_mem_pool.sc_mem_array[posit].enabled = theSchpck.enabled;
-      sch_mem_pool.sc_mem_array[posit].intrlck_set_id = theSchpck.intrlck_set_id;
-      sch_mem_pool.sc_mem_array[posit].intrlck_ass_id = theSchpck.intrlck_ass_id;
-      sch_mem_pool.sc_mem_array[posit].num_of_sch_tc = theSchpck.num_of_sch_tc;
       sch_mem_pool.sc_mem_array[posit].release_time = theSchpck.release_time;
       sch_mem_pool.sc_mem_array[posit].sch_evt = theSchpck.sch_evt;
       sch_mem_pool.sc_mem_array[posit].seq_count = theSchpck.seq_count;
@@ -373,24 +371,6 @@
       (*sc_pkt).sub_schedule_id = tc_pkt->data[0];
       if (!C_ASSERT((*sc_pkt).sub_schedule_id == 1) == true) {
           return SATR_SCHS_ID_INVALID;
-      }
-
-      (*sc_pkt).num_of_sch_tc = tc_pkt->data[1];
-      if (!C_ASSERT((*sc_pkt).num_of_sch_tc == 1) == true) {
-
-          return SATR_SCHS_NMR_OF_TC_INVLD;
-      }
-
-      (*sc_pkt).intrlck_set_id = tc_pkt->data[2];
-      if (!C_ASSERT((*sc_pkt).intrlck_set_id == 0) == true) {
-
-          return SATR_SCHS_INTRL_ID_INVLD;
-      }
-
-      (*sc_pkt).intrlck_ass_id = tc_pkt->data[3];
-      if (!C_ASSERT((*sc_pkt).intrlck_ass_id == 0) == true) {
-
-          return SATR_SCHS_ASS_INTRL_ID_INVLD;
       }
 
       (*sc_pkt).assmnt_type = tc_pkt->data[4];
@@ -934,7 +914,7 @@
             if(read(filedesc, sche_tc_buffer, &sch_mem_pool.sc_mem_array[s].tc_pck.length + 19) < 0){
               return SATR_ERROR;
             }else{
-              state = SATR_OK
+              state = SATR_OK;
             }
 
             if( state == SATR_OK){

@@ -27,6 +27,7 @@
 #include <string.h>
 #include <csp/csp.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include "subsystems_ids.h"
 #include "system.h"
 

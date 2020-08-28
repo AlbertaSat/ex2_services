@@ -22,7 +22,7 @@
 
   #include <stdlib.h>
   #include "service_utilities.h"
-  //#include "time_management_service.h"
+  #include "time_management_service.h"
   #include "services.h"
   // #include "pkt_pool.h"
   // #include "sysview.h"
@@ -31,39 +31,10 @@
 
   typedef enum {
     ABSOLUTE = 0,
-    SCHEDULE = 1,
-    SUBSCHEDULE = 2,
-    REPETITIVE = 4,
-    LAST_EVENTTIME = 5
+    REPETITIVE = 1
   }SC_event_time_type;
 
   typedef struct {
-          /* This is the application id that the telecommand it is destined to.
-           * This info will be extracted from the encapsulated TC packet.
-           */
-      TC_TM_app_id app_id;
-
-          /* This is the sequence count of the telecommand packet.
-           * This info will be extracted from the encapsulated TC packet.
-           */
-      uint8_t seq_count;
-
-          /* If the specific schedule command is enabled.
-           * Enabled = 1, Disabled = 0.
-           */
-      uint8_t enabled;
-
-          /* Currently not supported by this implementation.*
-           * For this specific implementation is set to 1 (one)
-           * for every schedule packet.
-           */
-      uint8_t sub_schedule_id;
-
-          /* Success or failure of the dependent telecommand, Success=1, Failure=0
-           * For this specific implementation is set to 1 (success)
-           * for every schedule packet.
-           */
-      uint8_t assmnt_type;
 
           /* Determines the release type for the telecommand.
            * See: SC_event_time_type
@@ -83,7 +54,6 @@
        uint32_t timeout;
 
           /* The actual telecommand packet to be scheduled and executed
-           *
            */
       csp_packet_t tc_pck;
 
@@ -125,7 +95,7 @@
 
       /* Schedules memory pool is full.
        * Full = true, 1
-       * space avaliable = false, 0
+       * Space avaliable = false, 0
        */
       uint8_t sch_arr_full;
 
