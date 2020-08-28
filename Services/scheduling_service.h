@@ -25,33 +25,37 @@
   #include "time_management_service.h"
   #include "services.h"
   // #include "pkt_pool.h"
-  // #include "sysview.h"
 
   #define SC_MAX_STORED_SCHEDULES 15 // Arbitrary
+  #define MAX_RELEASE_TIME 1733011200
 
   typedef enum {
-    ABSOLUTE = 0,
-    REPETITIVE = 1
+    RELATIVE = 0, // Time is relative to when schedule is added to pool
+    ABSOLUTE = 1 // Time is an absolute Unix timestamp
   }SC_event_time_type;
 
+  // TODO: Make pos_taken part of the packet pool instead of the packet
+
   typedef struct {
+          /* Identifies a schedule packet so that it can be
+          *  referenced elsewhere.
+          */
+      uint16_t sch_id
+
+          /* = 1 if schedule packet is enabled
+             = 0 if schedule packet is not enabled
+            */
+      uint8_t enabled
 
           /* Determines the release type for the telecommand.
            * See: SC_event_time_type
            */
       SC_event_time_type sch_evt;
 
-          /* Absolute or relative time of telecommand execution,
+          /* Absolute or relative or repetitive time of telecommand execution,
            * this field has meaning relative to sch_evt member.
            */
       uint32_t release_time;
-
-          /* This is a delta time which when added to the release time of the scheduled telecommand, the command
-           * is expected to complete execution.
-           * Timeout execution is only set if telecommand sets interlocks, so for our
-           * current implementation will be always 0 (zero)
-           */
-       uint32_t timeout;
 
           /* The actual telecommand packet to be scheduled and executed
            */
@@ -100,10 +104,10 @@
       uint8_t sch_arr_full;
 
       /* This array holds the value 1 (True), if
-       * the specified APID scheduling is enabled.
+       * the specified service scheduling is enabled.
        * OBC_APP_ID = 1, starts at zero index.
        */
-      uint8_t schs_apids_enabled[LAST_APP_ID-1];
+      uint8_t schs_services_enabled[LAST_APP_ID-1];
 
   }Scheduling_service_state;
 
@@ -124,20 +128,15 @@
   /* Directly insert scheduling packet */
   SAT_returnState scheduling_hard_insert_element( uint8_t posit, SC_pkt theSchpck );
 
-  /* Enable/Disable the execution of schedules */
-  SAT_returnState scheduling_toggle_apid_release( uint8_t subtype, uint8_t apid );
-
   /* Removing schedules */
   SAT_returnState scheduling_reset_pool();
 
-  SAT_returnState scheduling_remove_element(uint8_t apid, uint16_t seqc );
+  SAT_returnState scheduling_remove_element(uint16_t sch_id);
 
   /* Extracting Schedule packet from TC */
   SC_pkt* find_schedule_pos();
 
   SAT_returnState scheduling_parse_and_extract( SC_pkt *sc_pkt, csp_packet_t *tc_pkt );
-
-  uint8_t check_existing_sch(uint8_t apid, uint8_t seqc);
 
   SAT_returnState scheduling_copy_inner_tc(const uint8_t *buf, csp_packet_t *pkt, const uint16_t size);
 
