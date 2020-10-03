@@ -11,7 +11,11 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
-
+/**
+ * @file system_header.h
+ * @author Andrew Rooney, Brandon Danyluk
+ * @date 2020-10-03
+ */
 /*
     Including this header will automatically find the wanted
     sub-system header to include.
