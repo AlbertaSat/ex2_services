@@ -12,23 +12,19 @@
  * GNU General Public License for more details.
  */
 
-/**
- * This header file is unique to the system being implemented. It just includes
- * system specific headers, and defines system parameters.
- */
+/*
+    Including this header will automatically find the wanted
+    sub-system header to include.
+*/
 
-#ifndef SYSTEM_H
-#define SYSTEM_H
-
-#include "demo.h"
-#include "demo_hal.h"
-
-#ifndef SYSTEM_APP_ID
-#define SYSTEM_APP_ID _DEMO_APP_ID_
+#ifdef SYSTEM_APP_ID
+    #if SYSTEM_APP_ID == _DEMO_APP_ID_
+        #include "ex2_demo_software/system.h"
+    #elif SYSTEM_APP_ID == _OBC_APP_ID_
+        #include "ex2_obc_software/system.h"
+    #else
+        #error Cannot include proper header due to SYSTEM_APP_ID being defined as an unimplemented value
+    #endif
+#else
+    #error SYSTEM_APP_ID is undefined
 #endif
-
-#define USE_LOCALHOST  // Define for local development, add other options when
-                       // available
-int main(int argc, char **argv);
-
-#endif /* SYSTEM_H */

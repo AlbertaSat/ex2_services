@@ -39,7 +39,11 @@
  */
 
 /* Space Segment */
-#define _OBC_APP_ID_ 0
+/*  
+    Don't define any ID as 0. If SYSTEM_APP_ID is undefined some compilers
+    assumes 0 is the default value and can break some preprocessor statements
+*/
+#define _OBC_APP_ID_ 1
 #define _EPS_APP_ID_ 4
 #define _ADCS_APP_ID_ 2
 #define _COMMS_APP_ID_ 3
