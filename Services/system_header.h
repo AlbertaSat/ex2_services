@@ -20,6 +20,8 @@
     Including this header will automatically find the wanted
     sub-system header to include.
 */
+#ifndef SYSTEM_HEADER_H
+#define SYSTEM_HEADER_H
 
 #ifdef SYSTEM_APP_ID
     #if SYSTEM_APP_ID == _DEMO_APP_ID_
@@ -31,4 +33,6 @@
     #endif
 #else
     #error SYSTEM_APP_ID is undefined
+#endif
+
 #endif
