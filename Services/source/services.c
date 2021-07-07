@@ -24,6 +24,7 @@
 #include <csp/csp.h>
 
 #include "communication/communication_service.h"
+#include "communication/mac_service.h"
 #include "housekeeping/housekeeping_service.h"
 #include "time_management/time_management_service.h"
 #include "util/service_utilities.h"
