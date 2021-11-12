@@ -373,17 +373,21 @@ Result mock_everyone(All_systems_housekeeping* all_hk_data) {
  */
 Result collect_hk_from_devices(All_systems_housekeeping* all_hk_data) {
   /*populate struct by calling appropriate functions*/
-  ADCS_returnState ADCS_return_code = HAL_ADCS_getHK(&all_hk_data->adcs_hk); //ADCS get housekeeeing
-  int Athena_return_code = Athena_getHK(&all_hk_data->Athena_hk);    //Athena get temperature
+  #ifndef ADCS_IS_STUBBED
+    ADCS_returnState ADCS_return_code = HAL_ADCS_getHK(&all_hk_data->adcs_hk); //ADCS get housekeeeing
+  #endif /* ADCS Housekeeping */
 
-  EPS_getHK(&all_hk_data->EPS_hk, &all_hk_data->EPS_startup_hk);     //EPS get housekeeping
+  #ifndef IRIS_IS_STUBBED
   //TODO: populate IRIS housekeeping data
   //IRIS_return IRIS_return_code = IRIS_getHK(&all_hk_data->IRIS_hk) //IRIS get housekeeping
-  UHF_return UHF_return_code = UHF_getHK(&all_hk_data->UHF_hk);      //UHF get housekeeping
-  STX_return STX_return_code = HAL_S_getHK(&all_hk_data->S_band_hk); //S_band get housekeeping
+  #endif
+
+  #ifndef ATHENA_IS_STUBBED
+    int Athena_return_code = Athena_getHK(&all_hk_data->Athena_hk);    //Athena get temperature
+  #endif /* ADCS Housekeeping */
   
   #ifndef EPS_IS_STUBBED
-    EPS_getHK(&all_hk_data->EPS_hk,&all_hk_data->EPS_startup_hk);                                   //EPS get housekeeping
+    EPS_getHK(&all_hk_data->EPS_hk, &all_hk_data->EPS_startup_hk);     //EPS get housekeeping
   #endif /* EPS Housekeeping */
 
   #ifndef UHF_IS_STUBBED
