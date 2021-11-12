@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015  University of Alberta
+ * Copyright (C) 2021  University of Alberta
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -35,7 +35,6 @@
 #include <redposix.h> //include for file system
 
 #include "rtcmk.h" //to get time from RTC
-
 #include "task_manager/task_manager.h"
 #include "util/service_utilities.h"
 #include "services.h"
@@ -121,8 +120,6 @@ uint16_t get_file_id_from_timestamp(uint32_t timestamp) {
     }
   }
   return 0;
-
-
 }
 
 /**
@@ -618,14 +615,11 @@ static inline void prv_give_lock(SemaphoreHandle_t *lock) {
  */
 Result populate_and_store_hk_data(void) {
   All_systems_housekeeping temp_hk_data;
-
-  /*
+ 
   if(collect_hk_from_devices(&temp_hk_data) == FAILURE) {
     ex2_log("Error collecting hk data from peripherals\n");
   }
-  */
-
- 
+  
   //RTC_get_unix_time(&temp_hk_data.hk_timeorder.UNIXtimestamp);
   
   prv_get_lock(&f_count_lock); //lock
@@ -638,7 +632,7 @@ Result populate_and_store_hk_data(void) {
   config_loaded = 1;
 
   //TEMP mock hk
-  mock_everyone(&temp_hk_data); //not permanent
+  //mock_everyone(&temp_hk_data); //not permanent
   
   temp_hk_data.hk_timeorder.dataPosition = current_file;
 
@@ -702,27 +696,27 @@ Result load_historic_hk_data(uint16_t file_num, All_systems_housekeeping* all_hk
  *      enum for SUCCESS or FAILURE
  */
 Result set_max_files(uint16_t new_max) {
-  //ensure number requested isn't garbage
+  // ensure number requested isn't garbage
   if (new_max < 1 || new_max > 20160) return FAILURE;
 
-  prv_get_lock(&f_count_lock); //lock
+  prv_get_lock(&f_count_lock); // lock
   
-  //adjust the array
+  // adjust the array
 
-  //ensure value set before cleanup
+  // ensure value set before cleanup
   uint16_t old_max = MAX_FILES;
   MAX_FILES = new_max;
   
-  if (old_max < new_max){
+  if (old_max < new_max) {
     dynamic_timestamp_array_handler(new_max);
-    prv_give_lock(&f_count_lock); //unlock
+    prv_give_lock(&f_count_lock); // unlock
     return SUCCESS;
   }
 
   current_file = 1;
 
-  //Cleanup files code if number of files has been reduced
-  if(exists(fileName)){
+  // Cleanup files code if number of files has been reduced
+  if (exists(fileName)) {
     red_unlink(fileName);
   }
   if (dynamic_timestamp_array_handler(0) == FAILURE) {
@@ -730,7 +724,7 @@ Result set_max_files(uint16_t new_max) {
   }
 
   store_config(1);
-  prv_give_lock(&f_count_lock); //unlock
+  prv_give_lock(&f_count_lock); // unlock
   return SUCCESS;
 }
 
@@ -743,13 +737,13 @@ Result set_max_files(uint16_t new_max) {
  * @return
  *      enum for SUCCESS or FAILURE
  */
-Result convert_hk_endianness(All_systems_housekeeping* hk){
+Result convert_hk_endianness(All_systems_housekeeping* hk) {
   /*hk_time_and_order*/
   hk->hk_timeorder.UNIXtimestamp = csp_hton32(hk->hk_timeorder.UNIXtimestamp);
   hk->hk_timeorder.dataPosition = csp_hton16(hk->hk_timeorder.dataPosition);
 
-  //TODO:
-  //hk->ADCS_hk.
+  // TODO:
+  // hk->ADCS_hk.
   
   /*athena_housekeeping*/
   Athena_hk_convert_endianness(&hk->Athena_hk);
@@ -784,35 +778,34 @@ Result convert_hk_endianness(All_systems_housekeeping* hk){
  *      enum for success or failure
  */
 Result fetch_historic_hk_and_transmit(csp_conn_t *conn, uint16_t limit, uint16_t before_id, uint32_t before_time) {
-  prv_get_lock(&f_count_lock); //lock
+  prv_get_lock(&f_count_lock); // lock
   uint16_t locked_max = MAX_FILES;
   uint16_t locked_before_id = before_id;
   uint32_t locked_before_time = before_time;
-  if (locked_before_time != 0){ //use timestamp if exists
+  if (locked_before_time != 0) { // use timestamp if exists
     locked_before_id = get_file_id_from_timestamp(locked_before_time);
   }
   prv_give_lock(&f_count_lock);
 
-  //error check and accomodate user input
+  // error check and accomodate user input
   if (locked_before_id == 0 || locked_before_id > locked_max) {
     locked_before_id = current_file;
   }
-  //Check for data limit ignorance
-  if (limit > locked_max){
+  // Check for data limit ignorance
+  if (limit > locked_max) {
     limit = (uint16_t)locked_max;
   } else if (limit == 0) {
     ex2_log("Successfully did nothing O_o");
     return SUCCESS;
   }
   All_systems_housekeeping all_hk_data = {0};
-  //fetch each appropriate set of data from file
+  // fetch each appropriate set of data from file
   while (limit > 0) {
     locked_before_id--;
 
     if (locked_before_id == 0) {
       locked_before_id = locked_max;
     }
-    
 
     if (load_historic_hk_data(locked_before_id, &all_hk_data) != SUCCESS) {
       return FAILURE;
@@ -852,7 +845,7 @@ Result fetch_historic_hk_and_transmit(csp_conn_t *conn, uint16_t limit, uint16_t
 
     set_packet_length(packet, used_size + 2);
 
-    if (!csp_send(conn, packet, 50)) { //why are we all using magic number?
+    if (!csp_send(conn, packet, 50)) { // why are we all using magic number?
       ex2_log("Failed to send packet");
       csp_buffer_free(packet);
       return FAILURE;
@@ -876,7 +869,7 @@ SAT_returnState hk_service_app(csp_conn_t *conn, csp_packet_t *packet) {
   uint8_t ser_subtype = (uint8_t)packet->data[SUBSERVICE_BYTE];
   int8_t status;
   uint16_t new_max_files;
-  uint16_t * data16;
+  uint16_t *data16;
   uint16_t limit;
   uint16_t before_id;
   uint32_t before_time;
@@ -894,7 +887,7 @@ SAT_returnState hk_service_app(csp_conn_t *conn, csp_packet_t *packet) {
         memcpy(&packet->data[STATUS_BYTE], &status, sizeof(int8_t));
       }
 
-      set_packet_length(packet, sizeof(int8_t) + 1);  // +1 for subservice
+      set_packet_length(packet, sizeof(int8_t) + 1); // +1 for subservice
 
       if (!csp_send(conn, packet, 50)) {
         csp_buffer_free(packet);
@@ -923,9 +916,11 @@ SAT_returnState hk_service_app(csp_conn_t *conn, csp_packet_t *packet) {
       before_id = data16[1];
       before_time = ((uint32_t *)data16)[1];
       
+      if (!csp_send(conn, packet, 50)) {
       csp_buffer_free(packet);
-      if (fetch_historic_hk_and_transmit(conn, limit, before_id, before_time) != SUCCESS) {
-        return SATR_ERROR;
+        if (fetch_historic_hk_and_transmit(conn, limit, before_id, before_time) != SUCCESS) {
+            return SATR_ERROR;
+        }
       }
       break;
 
@@ -933,9 +928,6 @@ SAT_returnState hk_service_app(csp_conn_t *conn, csp_packet_t *packet) {
       ex2_log("No such subservice\n");
       return SATR_PKT_ILLEGAL_SUBSERVICE;
   }
-
-
-  
 
   return SATR_OK;
 }
@@ -950,14 +942,14 @@ SAT_returnState start_housekeeping_service(void);
  * @param void* param
  * @return None
  */
-void housekeeping_service(void * param) {
+void housekeeping_service(void *param) {
     csp_socket_t *sock;
     sock = csp_socket(CSP_SO_RDPREQ);
     csp_bind(sock, TC_HOUSEKEEPING_SERVICE);
     csp_listen(sock, SERVICE_BACKLOG_LEN);
     svc_wdt_counter++;
 
-    for(;;) {
+    for (;;) {
         csp_conn_t *conn;
         csp_packet_t *packet;
         if ((conn = csp_accept(sock, CSP_MAX_TIMEOUT)) == NULL) {
