@@ -75,15 +75,15 @@ uint16_t get_file_id_from_timestamp(uint32_t timestamp) {
   if(timestamps == NULL) {
     return 0;
   }
-  if (timestamps[current_file] == 0) { //haven't made full loop of storage
-    if (current_file == 1) { //base case. no files written
+  if (timestamps[current_file] == 0) { // haven't made full loop of storage
+    if (current_file == 1) {           // base case. no files written
       return 0;
     }
-    //not enough files written to use loop portion yet
+    // not enough files written to use loop portion yet
     left = 1;
-    right = current_file -1;
+    right = current_file - 1;
   } else {
-    //These accomodate circular structure
+    // These accomodate circular structure
     left = current_file;
     right = left + hk_timestamp_array_size - 1;
     offset = current_file - 1;
@@ -99,23 +99,23 @@ uint16_t get_file_id_from_timestamp(uint32_t timestamp) {
   }
   uint32_t true_position = left - offset;
   if (true_position > 1) {
-    if (timestamp - timestamps[true_position - 1] <= threshold) { //check lower neighbour if exists
+    if (timestamp - timestamps[true_position - 1] <= threshold) { // check lower neighbour if exists
       return true_position - 1;
     }
-    if (true_position != hk_timestamp_array_size) { //check self if won't cause underflow
+    if (true_position != hk_timestamp_array_size) { // check self if won't cause underflow
       if (timestamps[true_position] - timestamp <= threshold) {
         return true_position;
       }
-    } else { //left must be max index
+    } else { // left must be max index
       if (timestamp > timestamps[true_position] && 
-      timestamp - timestamps[true_position] <= threshold) { //edge case left is max index. bigger value than at max
+          timestamp - timestamps[true_position] <= threshold) { //edge case left is max index. bigger value than at max
         return true_position;
       } else if (timestamps[true_position] - timestamp <= threshold) { //edge case left is max index. smaller value than at max
         return true_position;
       }
     }
-  } else { //left must be min index
-    if (timestamps[true_position] - timestamp <= threshold) { //edge case left is min index. smaller than min
+  } else { // left must be min index
+    if (timestamps[true_position] - timestamp <= threshold) { // edge case left is min index. smaller than min
       return true_position;
     }
   }
@@ -139,19 +139,19 @@ Result dynamic_timestamp_array_handler(uint16_t num_items) {
     return SUCCESS;
   }
   if (num_items != hk_timestamp_array_size) {
-    uint32_t size = sizeof(*timestamps) * (num_items +1); //+1 to allow non-zero index room
+    uint32_t size = sizeof(*timestamps) * (num_items + 1); //+1 to allow non-zero index room
     uint32_t *tmp = (uint32_t*)pvPortMalloc(size);
     if (tmp == NULL) {
       return FAILURE;
     }
-    if (timestamps != NULL && hk_timestamp_array_size < num_items) { //check if growing because we delete everything if shrinking
+    if (timestamps != NULL && hk_timestamp_array_size < num_items) { // check if growing because we delete everything if shrinking
       memcpy(tmp, timestamps, sizeof(*timestamps) * hk_timestamp_array_size);
       vPortFree(timestamps);
     }
     timestamps = tmp;
 
     uint16_t i;
-    for (i = (hk_timestamp_array_size + 1); i <= num_items; i++) { //ensure new entries are clean
+    for (i = (hk_timestamp_array_size + 1); i <= num_items; i++) { // ensure new entries are clean
       timestamps[i] = 0;
     }
     hk_timestamp_array_size = num_items;
@@ -159,11 +159,11 @@ Result dynamic_timestamp_array_handler(uint16_t num_items) {
   return SUCCESS;
 }
 
-//temp function for testing. not for final project build
+// temp function for testing. not for final project build
 int32_t temp = 0;
 uint32_t tempTime = 1000;
 Result mock_everyone(All_systems_housekeeping* all_hk_data) {
-  //universal temps
+  // universal temps
   long tempLong = (long)temp;
   uint8_t tempu8 = (uint8_t)temp;
   int8_t temp8 = (int8_t)temp;
@@ -172,11 +172,10 @@ Result mock_everyone(All_systems_housekeeping* all_hk_data) {
   uint32_t tempu32 = (uint32_t)temp; 
   float tempFloat = (temp * 1.0);
 
-  //Packet meta
+  // Packet meta
   all_hk_data->hk_timeorder.UNIXtimestamp = tempTime;
 
-
-  //ADCS
+  // ADCS
   all_hk_data->adcs_hk.Estimated_Angular_Rate_X = tempFloat;
   all_hk_data->adcs_hk.Estimated_Angular_Rate_Y = tempFloat;
   all_hk_data->adcs_hk.Estimated_Angular_Rate_Z = tempFloat;
@@ -226,7 +225,7 @@ Result mock_everyone(All_systems_housekeeping* all_hk_data) {
   all_hk_data->adcs_hk.Rate_Sensor_Temp_Y = tempFloat;
   all_hk_data->adcs_hk.Rate_Sensor_Temp_Z = tempFloat;
 
-  //Athena
+  // Athena
   uint8_t i;
   for (i = 0; i < 2; i++) {
     all_hk_data->Athena_hk.temparray[i] = tempLong;
@@ -239,7 +238,7 @@ Result mock_everyone(All_systems_housekeeping* all_hk_data) {
   all_hk_data->Athena_hk.cmds_received = tempu16;
   all_hk_data->Athena_hk.pckts_uncovered_by_FEC = tempu16;
 
-  //EPS
+  // EPS
   all_hk_data->EPS_hk.cmd = tempu8;
   all_hk_data->EPS_hk.status = temp8;
   all_hk_data->EPS_hk.timestampInS = tempDouble;
@@ -262,13 +261,13 @@ Result mock_everyone(All_systems_housekeeping* all_hk_data) {
   all_hk_data->EPS_hk.PingWdt_toggles = tempu16;
   all_hk_data->EPS_hk.PingWdt_turnOffs = tempu8;
 
-  for (i = 0; i < 2;  i++) {
+  for (i = 0; i < 2; i++) {
       all_hk_data->EPS_hk.AOcurOutput[i] = tempu16;
   }
-  for (i = 0; i < 4;  i++) {
+  for (i = 0; i < 4; i++) {
       all_hk_data->EPS_hk.mpptConverterVoltage[i] = tempu16;
   }
-  for (i = 0; i < 8;  i++) {
+  for (i = 0; i < 8; i++) {
       all_hk_data->EPS_hk.curSolarPanels[i] = tempu16;
       all_hk_data->EPS_hk.OutputConverterVoltage[i] = tempu16;
   }
@@ -282,7 +281,7 @@ Result mock_everyone(All_systems_housekeeping* all_hk_data) {
       all_hk_data->EPS_hk.temp[i] = temp8;
   }
 
-  //UHF
+  // UHF
   all_hk_data->UHF_hk.freq = tempu32;
   all_hk_data->UHF_hk.pipe_t = tempu32;
   all_hk_data->UHF_hk.beacon_t = tempu32;
@@ -293,11 +292,11 @@ Result mock_everyone(All_systems_housekeeping* all_hk_data) {
   all_hk_data->UHF_hk.pckts_in_crc16 = tempu32;
   all_hk_data->UHF_hk.temperature = tempFloat;
 
-  for (i = 0; i < SCW_LEN;  i++) {
+  for (i = 0; i < SCW_LEN; i++) {
     all_hk_data->UHF_hk.scw[i] = tempu8;
   }
 
-  //Sband
+  // Sband
   all_hk_data->S_band_hk.Output_Power = tempFloat;
   all_hk_data->S_band_hk.PA_Temp = tempFloat;
   all_hk_data->S_band_hk.Top_Temp = tempFloat;
@@ -307,7 +306,7 @@ Result mock_everyone(All_systems_housekeeping* all_hk_data) {
   all_hk_data->S_band_hk.PA_Current = tempFloat;
   all_hk_data->S_band_hk.PA_Voltage = tempFloat;
 
-  //Hyperion
+  // Hyperion
   all_hk_data->hyperion_hk.Nadir_Temp1 = tempFloat;
   all_hk_data->hyperion_hk.Port_Temp1 = tempFloat;
   all_hk_data->hyperion_hk.Port_Temp2 = tempFloat;
@@ -361,7 +360,6 @@ Result mock_everyone(All_systems_housekeeping* all_hk_data) {
   return SUCCESS;
 }
 
-
 /**
  * @brief
  *      Private. Collect housekeeping information from each device in system
@@ -375,7 +373,7 @@ Result mock_everyone(All_systems_housekeeping* all_hk_data) {
  */
 Result collect_hk_from_devices(All_systems_housekeeping* all_hk_data) {
   /*populate struct by calling appropriate functions*/
-  ADCS_returnState ADCS_return_code = HAL_ADCS_getHK(&all_hk_data->adcs_hk);             //ADCS get housekeeeing
+  ADCS_returnState ADCS_return_code = HAL_ADCS_getHK(&all_hk_data->adcs_hk); //ADCS get housekeeeing
   int Athena_return_code = Athena_getHK(&all_hk_data->Athena_hk);    //Athena get temperature
 
   EPS_getHK(&all_hk_data->EPS_hk, &all_hk_data->EPS_startup_hk);     //EPS get housekeeping
@@ -384,6 +382,18 @@ Result collect_hk_from_devices(All_systems_housekeeping* all_hk_data) {
   UHF_return UHF_return_code = UHF_getHK(&all_hk_data->UHF_hk);      //UHF get housekeeping
   STX_return STX_return_code = HAL_S_getHK(&all_hk_data->S_band_hk); //S_band get housekeeping
   
+  #ifndef EPS_IS_STUBBED
+    EPS_getHK(&all_hk_data->EPS_hk,&all_hk_data->EPS_startup_hk);                                   //EPS get housekeeping
+  #endif /* EPS Housekeeping */
+
+  #ifndef UHF_IS_STUBBED
+    UHF_return UHF_return_code = UHF_getHK(&all_hk_data->UHF_hk);      //UHF get housekeeping
+  #endif /* UHF Housekeeping */
+
+  #ifndef SBAND_IS_STUBBED
+    STX_return STX_return_code = HAL_S_getHK(&all_hk_data->S_band_hk); //S_band get housekeeping
+  #endif /* SBAND Housekeeping */
+
   #ifdef HYPERION_PANEL_3U
     Hyperion_config1_getHK(&all_hk_data->hyperion_hk);
   #endif /* HYPERION_PANEL_3U */
@@ -406,15 +416,15 @@ Result collect_hk_from_devices(All_systems_housekeeping* all_hk_data) {
  * @return Found_file
  *      FILE_EXISTS or FILE_NOT_EXIST
  */
-Found_file exists(const char *filename){
+static Found_file exists(const char *filename) {
     int32_t file;
     red_errno = 0;
     file = red_open(filename, RED_O_CREAT | RED_O_EXCL | RED_O_RDWR); //attempt to create file
-    if (red_errno == RED_EEXIST){ //does file already exist?
+    if (red_errno == RED_EEXIST) { //does file already exist?
         return FILE_EXISTS;   
     }
-    red_close(file); //didn't exist. was created. now close it
-    red_unlink(filename); //delete file. file creation would be a side affect
+    red_close(file);      // didn't exist. was created. now close it
+    red_unlink(filename); // delete file. file creation would be a side affect
     return FILE_NOT_EXIST;
 }
 
@@ -423,15 +433,15 @@ Result store_config(uint8_t rewrite_all) {
   if (exists(hk_config) == FILE_EXISTS) {
     exist = 1;
   }
-  int32_t fout = red_open(hk_config, RED_O_CREAT | RED_O_RDWR); //open or create file to write binary
+  int32_t fout = red_open(hk_config, RED_O_CREAT | RED_O_RDWR); // open or create file to write binary
   if (fout == -1) {
     ex2_log("Failed to open or create file to write: '%s'\n", hk_config);
     return FAILURE;
   }
   red_write(fout, &MAX_FILES, sizeof(MAX_FILES));
   red_write(fout, &current_file, sizeof(current_file));
-  red_write(fout, &tempTime, sizeof(tempTime)); //for debugging
-  if (exist == 0 || rewrite_all == 1){
+  red_write(fout, &tempTime, sizeof(tempTime)); // for debugging
+  if (exist == 0 || rewrite_all == 1) {
     red_write(fout, timestamps, ((hk_timestamp_array_size + 1) * sizeof(uint32_t)));
   } else {
     red_lseek(fout, current_file * sizeof(uint32_t), RED_SEEK_CUR);
@@ -442,18 +452,18 @@ Result store_config(uint8_t rewrite_all) {
 }
 
 Result load_config() {
-  if(exists(hk_config) == FILE_NOT_EXIST){
-    ex2_log("Config file: '%s' does not exist\n", hk_config);
-    return FAILURE;
+  if (exists(hk_config) == FILE_NOT_EXIST) {
+      ex2_log("Config file: '%s' does not exist\n", hk_config);
+      return FAILURE;
   }
-  int32_t fin = red_open(hk_config, RED_O_RDONLY); //open file to read binary
+  int32_t fin = red_open(hk_config, RED_O_RDONLY); // open file to read binary
   if (fin == -1) {
     ex2_log("Failed to open file to read: '%s'\n", hk_config);
     return FAILURE;
   }
   red_read(fin, &MAX_FILES, sizeof(MAX_FILES));
   red_read(fin, &current_file, sizeof(current_file));
-  red_read(fin, &tempTime, sizeof(tempTime)); //for debugging
+  red_read(fin, &tempTime, sizeof(tempTime)); // for debugging
   if (dynamic_timestamp_array_handler(MAX_FILES) == SUCCESS) {
     red_read(fin, timestamps, ((hk_timestamp_array_size + 1) * sizeof(uint32_t)));
   } else {
@@ -462,8 +472,8 @@ Result load_config() {
   red_close(fin);
 
   ++current_file;
-  if(current_file > MAX_FILES) {
-    current_file = 1;
+  if (current_file > MAX_FILES) {
+      current_file = 1;
   }
 
   return SUCCESS;
@@ -478,17 +488,16 @@ Result load_config() {
  *    uint16_t of the size of the structure
  */
 uint16_t get_size_of_housekeeping(All_systems_housekeeping* all_hk_data) { 
-  //needed_size is currently 713 bytes as of 2021/08/24
-  uint16_t needed_size =  sizeof(all_hk_data->hk_timeorder) + //currently 7U
-                          sizeof(all_hk_data->Athena_hk) +    //currently 24U
-                          sizeof(all_hk_data->EPS_hk) +       //currently 236U
-                          sizeof(all_hk_data->UHF_hk) +       //currently 48U
-                          sizeof(all_hk_data->S_band_hk)+     //currently 32U
-                          sizeof(all_hk_data->adcs_hk) +      //currently 178U
-                          sizeof(all_hk_data->hyperion_hk);   //currently 188U
+  // needed_size is currently 713 bytes as of 2021/08/24
+  uint16_t needed_size = sizeof(all_hk_data->hk_timeorder) + // currently 7U
+                         sizeof(all_hk_data->Athena_hk) +    // currently 24U
+                         sizeof(all_hk_data->EPS_hk) +       // currently 236U
+                         sizeof(all_hk_data->UHF_hk) +       // currently 48U
+                         sizeof(all_hk_data->S_band_hk) +    // currently 32U
+                         sizeof(all_hk_data->adcs_hk) +      // currently 178U
+                         sizeof(all_hk_data->hyperion_hk);   // currently 188U
   return needed_size;
 }
-
 
 /**
  * @brief
@@ -504,17 +513,14 @@ uint16_t get_size_of_housekeeping(All_systems_housekeeping* all_hk_data) {
  *      FAILURE or SUCCESS
  */
 Result write_hk_to_file(uint16_t filenumber, All_systems_housekeeping* all_hk_data) {
-  int32_t fout = red_open(fileName, RED_O_CREAT | RED_O_RDWR); //open or create file to write binary
+  int32_t fout = red_open(fileName, RED_O_CREAT | RED_O_RDWR); // open or create file to write binary
   if (fout == -1) {
     ex2_log("Failed to open or create file to write: '%s'\n", fileName);
     return FAILURE;
   }
   uint16_t needed_size = get_size_of_housekeeping(all_hk_data);
   
-
-
   red_lseek(fout, (filenumber - 1) * needed_size, RED_SEEK_SET);
-
 
   red_errno = 0;
   /*The order of writes and subsequent reads must match*/
@@ -526,11 +532,10 @@ Result write_hk_to_file(uint16_t filenumber, All_systems_housekeeping* all_hk_da
   red_write(fout, &all_hk_data->S_band_hk, sizeof(all_hk_data->S_band_hk));
   red_write(fout, &all_hk_data->hyperion_hk, sizeof(all_hk_data->hyperion_hk));
   
-
-  if(red_errno != 0) {
-    ex2_log("Failed to write to file: '%s'\n", fileName);
-    red_close(fout);
-    return FAILURE;
+  if (red_errno != 0) {
+      ex2_log("Failed to write to file: '%s'\n", fileName);
+      red_close(fout);
+      return FAILURE;
   }
   red_close(fout);
   return SUCCESS;
@@ -550,11 +555,11 @@ Result write_hk_to_file(uint16_t filenumber, All_systems_housekeeping* all_hk_da
  *      FAILURE or SUCCESS
  */
 Result read_hk_from_file(uint16_t filenumber, All_systems_housekeeping* all_hk_data) {
-  if(exists(fileName) == FILE_NOT_EXIST){
-    ex2_log("Attempted to read file that doesn't exist: '%s'\n", fileName);
-    return FAILURE;
+  if (exists(fileName) == FILE_NOT_EXIST) {
+      ex2_log("Attempted to read file that doesn't exist: '%s'\n", fileName);
+      return FAILURE;
   }
-  int32_t fin = red_open(fileName, RED_O_RDONLY); //open file to read binary
+  int32_t fin = red_open(fileName, RED_O_RDONLY); // open file to read binary
   if (fin == -1) {
     ex2_log("Failed to open file to read: '%c'\n", fileName);
     return FAILURE;
@@ -562,9 +567,7 @@ Result read_hk_from_file(uint16_t filenumber, All_systems_housekeeping* all_hk_d
 
   uint16_t needed_size = get_size_of_housekeeping(all_hk_data);
 
-
   red_lseek(fin, (filenumber - 1) * needed_size, RED_SEEK_SET);
-
 
   red_errno = 0;
   /*The order of writes and subsequent reads must match*/
@@ -576,10 +579,10 @@ Result read_hk_from_file(uint16_t filenumber, All_systems_housekeeping* all_hk_d
   red_read(fin, &all_hk_data->S_band_hk, sizeof(all_hk_data->S_band_hk));
   red_read(fin, &all_hk_data->hyperion_hk, sizeof(all_hk_data->hyperion_hk));
 
-  if(red_errno != 0) {
-    ex2_log("Failed to read: '%c'\n", fileName);
-    red_close(fin);
-    return FAILURE;
+  if (red_errno != 0) {
+      ex2_log("Failed to read: '%c'\n", fileName);
+      red_close(fin);
+      return FAILURE;
   }
   red_close(fin);
   return SUCCESS;
@@ -589,7 +592,7 @@ Result read_hk_from_file(uint16_t filenumber, All_systems_housekeeping* all_hk_d
 int num_digits(int num) {
   uint16_t count = 0;
 
-  while(num != 0) {
+  while (num != 0) {
     num /= 10;
     ++count;
   }
@@ -622,11 +625,11 @@ Result populate_and_store_hk_data(void) {
   
   //RTC_get_unix_time(&temp_hk_data.hk_timeorder.UNIXtimestamp);
   
-  prv_get_lock(&f_count_lock); //lock
+  prv_get_lock(&f_count_lock); // lock
   
-  if (config_loaded == 0){
+  if (config_loaded == 0) {
     if (load_config() == FAILURE) {
-      ex2_log("couldn't load config");
+        ex2_log("couldn't load config");
     }
   }
   config_loaded = 1;
@@ -636,13 +639,12 @@ Result populate_and_store_hk_data(void) {
   
   temp_hk_data.hk_timeorder.dataPosition = current_file;
 
-  if(write_hk_to_file(current_file, &temp_hk_data) != SUCCESS) {
-    ex2_log("Housekeeping data lost\n");
-    prv_give_lock(&f_count_lock); //unlock
-    return FAILURE;
+  if (write_hk_to_file(current_file, &temp_hk_data) != SUCCESS) {
+      ex2_log("Housekeeping data lost\n");
+      prv_give_lock(&f_count_lock); //unlock
+      return FAILURE;
   }
 
-  
   if (dynamic_timestamp_array_handler(MAX_FILES) == SUCCESS) {
     timestamps[current_file] = temp_hk_data.hk_timeorder.UNIXtimestamp;
   } else {
@@ -653,12 +655,11 @@ Result populate_and_store_hk_data(void) {
   ex2_log("%zu written to disk", current_file);
 
   ++current_file;
-  if(current_file > MAX_FILES) {
-    current_file = 1;
+  if (current_file > MAX_FILES) {
+      current_file = 1;
   }
 
-  
-  prv_give_lock(&f_count_lock); //unlock
+  prv_give_lock(&f_count_lock); // unlock
   return SUCCESS;
 }
 
@@ -674,7 +675,7 @@ Result populate_and_store_hk_data(void) {
  *      enum for SUCCESS or FAILURE
  */
 Result load_historic_hk_data(uint16_t file_num, All_systems_housekeeping* all_hk_data) {
-  if(read_hk_from_file(file_num, all_hk_data) != SUCCESS) {
+  if (read_hk_from_file(file_num, all_hk_data) != SUCCESS) {
     ex2_log("Housekeeping data could not be retrieved\n");
     return FAILURE;
   }
