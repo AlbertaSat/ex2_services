@@ -31,6 +31,7 @@
 #include "sband.h"
 #include "hyperion.h"
 #include "adcs.h"
+//#include "ex2_hal/ex2_payload_software/hardware_interface/include/payload.h"
 
 /* Housekeeping service address & port*/
 
@@ -82,10 +83,13 @@ typedef struct __attribute__((packed)){
   ADCS_HouseKeeping adcs_hk;           //ADCS housekeeping struct
   athena_housekeeping Athena_hk;         //Athena housekeeping struct
   eps_instantaneous_telemetry_t EPS_hk;  //EPS telemetry struct
+  eps_startup_telemetry_t EPS_startup_hk;//EPS startup telemetry struct
   UHF_housekeeping UHF_hk;               //UHF status struct
   Sband_Housekeeping S_band_hk;          //S-band housekeeping struct
   Hyperion_HouseKeeping hyperion_hk;     //Hyperion housekeeping
+  //Payload_HouseKeeping payload_hk;       //Payload housekeeping
 } All_systems_housekeeping;
+
 
 SAT_returnState start_housekeeping_service(void);
 

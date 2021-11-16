@@ -227,9 +227,16 @@ Result mock_everyone(All_systems_housekeeping* all_hk_data) {
 
   //Athena
   uint8_t i;
-  for (i = 0; i < 6; i++) {
+  for (i = 0; i < 2; i++) {
     all_hk_data->Athena_hk.temparray[i] = tempLong;
   }
+  all_hk_data->Athena_hk.boot_cnt = tempu16;
+  all_hk_data->Athena_hk.OBC_mode = tempu8;
+  all_hk_data->Athena_hk.OBC_uptime = tempu16;
+  all_hk_data->Athena_hk.solar_panel_supply_curr = tempu8;
+  all_hk_data->Athena_hk.OBC_software_ver = tempu8;
+  all_hk_data->Athena_hk.cmds_received = tempu16;
+  all_hk_data->Athena_hk.pckts_uncovered_by_FEC = tempu16;
 
   //EPS
   all_hk_data->EPS_hk.cmd = tempu8;
@@ -367,13 +374,32 @@ Result mock_everyone(All_systems_housekeeping* all_hk_data) {
  */
 Result collect_hk_from_devices(All_systems_housekeeping* all_hk_data) {
   /*populate struct by calling appropriate functions*/
-  ADCS_returnState ADCS_return_code = HAL_ADCS_getHK(&all_hk_data->adcs_hk);             //ADCS get housekeeeing
-  int Athena_return_code = Athena_getHK(&all_hk_data->Athena_hk);    //Athena get temperature
+  #ifndef ADCS_IS_STUBBED
+    ADCS_returnState ADCS_return_code = HAL_ADCS_getHK(&all_hk_data->adcs_hk);             //ADCS get housekeeeing
+  #endif /* ADCS Housekeeping */
 
-  EPS_getHK(&all_hk_data->EPS_hk);                                   //EPS get housekeeping
-  UHF_return UHF_return_code = UHF_getHK(&all_hk_data->UHF_hk);      //UHF get housekeeping
-  STX_return STX_return_code = HAL_S_getHK(&all_hk_data->S_band_hk); //S_band get housekeeping
+  #ifndef ATHENA_IS_STUBBED
+    int Athena_return_code = Athena_getHK(&all_hk_data->Athena_hk);    //Athena get temperature
+  #endif /* ADCS Housekeeping */
   
+  #ifndef EPS_IS_STUBBED
+    eps_refresh_instantaneous_telemetry();
+    eps_instantaneous_telemetry_t eps = get_eps_instantaneous_telemetry();
+
+    //Adding these in order to get the startup telemetry - should be added elsewhere
+    eps_refresh_startup_telemetry();
+    eps_startup_telemetry_t eps_startup = get_eps_startup_telemetry();
+    EPS_getHK(&all_hk_data->EPS_hk,&all_hk_data->EPS_startup_hk);                                   //EPS get housekeeping
+  #endif /* EPS Housekeeping */
+
+  #ifndef UHF_IS_STUBBED
+    UHF_return UHF_return_code = UHF_getHK(&all_hk_data->UHF_hk);      //UHF get housekeeping
+  #endif /* UHF Housekeeping */
+
+  #ifndef SBAND_IS_STUBBED
+    STX_return STX_return_code = HAL_S_getHK(&all_hk_data->S_band_hk); //S_band get housekeeping
+  #endif /* SBAND Housekeeping */
+
   #ifdef HYPERION_PANEL_3U
     Hyperion_config1_getHK(&all_hk_data->hyperion_hk);
   #endif /* HYPERION_PANEL_3U */
@@ -494,6 +520,7 @@ uint16_t get_size_of_housekeeping(All_systems_housekeeping* all_hk_data) {
 Result write_hk_to_file(uint16_t filenumber, All_systems_housekeeping* all_hk_data) {
   int32_t fout = red_open(fileName, RED_O_CREAT | RED_O_RDWR); //open or create file to write binary
   if (fout == -1) {
+    printf("Unexpected error %d from red_open()\r\n", (int)red_errno);
     ex2_log("Failed to open or create file to write: '%s'\n", fileName);
     return FAILURE;
   }
@@ -604,11 +631,9 @@ static inline void prv_give_lock(SemaphoreHandle_t *lock) {
 Result populate_and_store_hk_data(void) {
   All_systems_housekeeping temp_hk_data;
 
-  /*
   if(collect_hk_from_devices(&temp_hk_data) == FAILURE) {
     ex2_log("Error collecting hk data from peripherals\n");
   }
-  */
 
  
   //RTC_get_unix_time(&temp_hk_data.hk_timeorder.UNIXtimestamp);
@@ -623,7 +648,7 @@ Result populate_and_store_hk_data(void) {
   config_loaded = 1;
 
   //TEMP mock hk
-  mock_everyone(&temp_hk_data); //not permanent
+  //mock_everyone(&temp_hk_data); //not permanent
   
   temp_hk_data.hk_timeorder.dataPosition = current_file;
 
