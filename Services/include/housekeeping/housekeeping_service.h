@@ -35,9 +35,6 @@
 /* Housekeeping service address & port*/
 #define HK_PARAMETERS_REPORT 25
 
-// Athena temp array size should be redefined in HOUSEKEEPING_ATHENA_H
-#define ATHENA_TEMP_ARRAY_SIZE 2
-
 //#define TM_HK_PARAMETERS_REPORT 21
 
 #define HK_PR_ERR -1
