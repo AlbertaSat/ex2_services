@@ -32,7 +32,9 @@
 #include "hyperion.h"
 #include "adcs.h"
 
+#ifndef PAYLOAD_IS_STUBBED
 #include "payload.h"
+#endif /* PAYLOAD_IS_STUBBED */
 
 /* Housekeeping service address & port*/
 
