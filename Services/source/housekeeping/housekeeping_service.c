@@ -405,8 +405,6 @@ Result collect_hk_from_devices(All_systems_housekeeping *all_hk_data) {
     Hyperion_config3_getHK(&all_hk_data->hyperion_hk);
 #endif /* HYPERION_PANEL_2U */
 
-    start_beacon_daemon(&all_hk_data);
-
     /*consider if struct should hold error codes returned from these functions*/
     return SUCCESS;
 }
