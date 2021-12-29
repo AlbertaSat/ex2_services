@@ -26,6 +26,7 @@
 
 /*includes to allow colleting hk from other devices*/
 #include "housekeeping_athena.h"
+#include "housekeeping_charon.h"
 #include "eps.h"
 #include "uhf.h"
 #include "sband.h"
@@ -87,6 +88,7 @@ typedef struct __attribute__((packed)){
   UHF_housekeeping UHF_hk;               //UHF status struct
   Sband_Housekeeping S_band_hk;          //S-band housekeeping struct
   Hyperion_HouseKeeping hyperion_hk;     //Hyperion housekeeping
+  charon_housekeeping charon_hk;         //Charon housekeeping
   //Payload_HouseKeeping payload_hk;       //Payload housekeeping
 } All_systems_housekeeping;
 
