@@ -56,11 +56,6 @@ void RTC_discipline_service(void) {
 
     time_t utc_time;
 
-    if (!gps_skytraq_driver_init()) {
-        ex2_log("failed to init skytraq\r\n");
-        vTaskDelete(NULL);
-    }
-
     for (;;) {
         vTaskDelay(DISCIPLINE_DELAY);
         if(!(gps_get_utc_time(&utc_time))){
