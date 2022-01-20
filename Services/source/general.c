@@ -30,6 +30,7 @@
 #include <main/system.h>
 #include <os_task.h>
 #include "diagnostic.h"
+#include "system.h"
 
 SAT_returnState general_app(csp_packet_t *packet);
 void general_service(void *param);
