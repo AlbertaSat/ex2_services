@@ -56,6 +56,8 @@
 #define TC_ADCS_SERVICE 18
 // LOGGING SERVICE
 #define TC_LOGGER_SERVICE 13
+// DFGM SERVICE
+#define TC_DFGM_SERVICE 100 // Probably not a good value
 
 #define DELAY_WAIT_TIMEOUT 8000
 
@@ -66,7 +68,8 @@ typedef enum {
     COMMS_APP_ID = _COMMS_APP_ID_,
     GND_APP_ID = _GND_APP_ID_,
     DEMO_APP_ID = _DEMO_APP_ID_,
-    LAST_APP_ID = _LAST_APP_ID_
+    LAST_APP_ID = _LAST_APP_ID_,
+    DFGM_APP_ID = _DFGM_APP_ID_
 } TC_TM_app_id;
 
 /* Utility definitions */

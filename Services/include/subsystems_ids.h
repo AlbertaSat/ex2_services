@@ -43,6 +43,7 @@
 #define _EPS_APP_ID_ 4
 #define _ADCS_APP_ID_ 2
 #define _COMMS_APP_ID_ 3
+#define _DFGM_APP_ID_ 5 // Unsure if this is correct
 
 /* Ground Segment */
 #define _GND_APP_ID_ 16

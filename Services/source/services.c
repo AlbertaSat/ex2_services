@@ -23,7 +23,7 @@
 #include <csp/csp.h>
 #include <os_task.h>
 
-#include "communication/communication_service.h"
+#include "dfgm/dfgm_service.h"
 #include "general.h"
 #include "housekeeping/housekeeping_service.h"
 #include "logger/logger_service.h"
@@ -51,7 +51,8 @@ SAT_returnState start_service_server(void) {
 
     if (start_communication_service() != SATR_OK || start_time_management_service() != SATR_OK ||
         start_housekeeping_service() != SATR_OK || start_general_service() != SATR_OK ||
-        start_updater_service() != SATR_OK || start_logger_service() != SATR_OK) {
+        start_updater_service() != SATR_OK || start_logger_service() != SATR_OK ||
+        start_dfgm_service() != SATR_OK) {
         return SATR_ERROR;
     }
     return SATR_OK;
