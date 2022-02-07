@@ -57,7 +57,7 @@
 // LOGGING SERVICE
 #define TC_LOGGER_SERVICE 13
 // DFGM SERVICE
-#define TC_DFGM_SERVICE 14 // "Pick one that's not used and greater than 10"
+#define TC_DFGM_SERVICE 16 // "Pick one that's not used and greater than 10"
 
 #define DELAY_WAIT_TIMEOUT 8000
 
