@@ -29,7 +29,11 @@
 
 typedef enum {
     // what operations to put?
-    FILLER_OPERATION
+    DFGM_RUN = 0,
+    DFGM_START,
+    DFGM_STOP,
+    DFGM_FILTER,
+    DFGM_GET_HK
 } DFGM_Subtype;
 
 SAT_returnState dfgm_service_app(csp_packet_t *pkt);

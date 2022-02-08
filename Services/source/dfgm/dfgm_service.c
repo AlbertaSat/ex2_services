@@ -24,8 +24,11 @@
 #include <csp/csp_endian.h>
 #include <main/system.h>
 
+#include "dfgm.h" // Need to rewrite dfgm.h (hardware interface)
 #include "services.h"
 #include "task_manager/task_manager.h"
+
+#include <limits.h>
 
 SAT_returnState dfgm_service_app(csp_packet_t *packet);
 
@@ -119,23 +122,75 @@ SAT_returnState dfgm_service_app(csp_packet_t *packet) {
     SAT_returnState return_state = SATR_OK; // OK until error encountered
 
     switch (ser_subtype) {
-    //case SUBTYPE1: {
-        //status = HAL_DFGM_function();
-        //memcpy(&packet->data[STATUS_BYTE], &status, sizeof(int8_t));
-        //set_packet_length(packet, sizeof(int8_t) + 1);
-        //break;
-    //}
+    case DFGM_RUN: {
+        // Get runtime from packet (What data type to use for max value?)
+        int runtime;
+        cnv8_32(&packet->data[IN_DATA_BYTE], &runtime);
 
-    //case SUBTYPE2: {
-        //status = ...
-    //}
+        // Run DFGM Task for amount of seconds in runtime
+        status = HAL_DFGM_run(runtime);
 
-    //default:
-        //ex2_log("No such subservice\n");
-        //return_state = SATR_PKR_ILLEGAL_SUBSERVICE
-    //}
+        // Return success status of subservice
+        memcpy(&packet->data[STATUS_BYTE], &status, sizeof(int8_t));
+        set_packet_length(packet, sizeof(int8_t) + 1);
+        break;
+    }
 
-    // return return_state
+    case DFGM_START: {
+        // Run DFGM Task for INT_MAX seconds
+        status = HAL_DFGM_run(INT_MAX);
+
+        // Return success status of subservice
+        memcpy(&packet->data[STATUS_BYTE], &status, sizeof(int8_t));
+        set_packet_length(packet, sizeof(int8_t) + 1);
+        break;
+    }
+
+    case DFGM_STOP: {
+        // Interrupt the task if it's running
+        status = HAL_DFGM_stop();
+
+        // Return success status of subservice
+        memcpy(&packet->data[STATUS_BYTE], &status, sizeof(int8_t));
+        set_packet_length(packet, sizeof(int8_t) + 1);
+        break;
+    }
+
+    case DFGM_FILTER: {
+        // Get filter mode (either 10 Hz or 1 Hz)
+        uint8_t filter_mode = (uint8_t)packet->data[IN_DATA_BYTE];
+
+        // if else statement here for 2 different HAL functions or an if else statement in the HAL function
+        status = HAL_DFGM_filterTo10Hz();
+        status = HAL_DFGM_filterTo1Hz();
+
+        // Return success status of subservice
+        memcpy(&packet->data[STATUS_BYTE], &status, sizeof(int8_t));
+        set_packet_length(packet, sizeof(int8_t) + 1);
+        break;
+    }
+
+    case DFGM_GET_HK: {
+        // Get DFGM HK data
+        DFGM_Housekeeping HK;
+        status = HAL_DFGM_getHK(&HK); // Should check if HK is most recent
+
+        // Convert data types into what's used in packet (refer to line 252 of communication_service.c)
+        //HK.attribute1 = csp_htonflt(HK.attribute1);
+
+        // Return success status of subservice
+        memcpy(&packet->data[STATUS_BYTE], &status, sizeof(int8_t));
+        memcpy(&packet->data[OUT_DATA_BYTE], &HK, sizeof(HK));
+        set_packet_length(packet, sizeof(int8_t) + sizeof(HK) + 1);
+        break;
+    }
+
+    default:
+        ex2_log("No such subservice!\n");
+        return_state = SATR_PKT_ILLEGAL_SUBSERVICE;
+    }
+
+    return return_state;
     }
 }
 
