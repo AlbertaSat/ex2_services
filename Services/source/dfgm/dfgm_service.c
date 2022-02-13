@@ -24,11 +24,13 @@
 #include <csp/csp_endian.h>
 #include <main/system.h>
 
-#include "dfgm.h" // Need to rewrite dfgm.h (hardware interface)
+#include "dfgm.h"
 #include "services.h"
 #include "task_manager/task_manager.h"
+#include "util/service_utilities.h"
 
 #include <limits.h>
+#include <stdint.h>
 
 SAT_returnState dfgm_service_app(csp_packet_t *packet);
 
@@ -64,12 +66,13 @@ void dfgm_service(void *param) {
         }
         svc_wdt_counter++;
 
-        // read packets
+        // read and process packets
         while ((packet = csp_read(conn, 50)) != NULL) {
             if (dfgm_service_app(packet) != SATR_OK) {
-                // something went wrong in the service
+                // something went wrong in a subservice, ignore the packet
                 csp_buffer_free(packet);
             } else {
+                // subservice was somewhat successful, send packet back
                 if (!csp_send(conn, packet, 50)) {
                     csp_buffer_free(packet);
                 }
@@ -93,6 +96,7 @@ SAT_returnState start_dfgm_service(void) {
     TaskHandle_t svc_tsk;
     taskFunctions svc_funcs = {0};
     svc_funcs.getCounterFunction = get_svc_wdt_counter;
+    dfgm_init(); // Start up the DFGM RX Task that collects data
 
     if (xTaskCreate((TaskFunction_t)dfgm_service, "dfgm_service", 1024, NULL,
                     NORMAL_SERVICE_PRIO, &svc_tsk) != pdPASS) {
@@ -108,7 +112,7 @@ SAT_returnState start_dfgm_service(void) {
  * @brief
  *      Takes a CSP packet and switches based on the subservice command
  * @details
- *      Reads/Writes data from DFGM EHs as subservices
+ *      Reads/Writes data from DFGM EH using subservices
  * @attention
  *      Some subservices return the aggregation of error status of multiple HALs
  * @param *packet
@@ -118,17 +122,20 @@ SAT_returnState start_dfgm_service(void) {
  */
 SAT_returnState dfgm_service_app(csp_packet_t *packet) {
     uint8_t ser_subtype = (uint8_t)packet->data[SUBSERVICE_BYTE];
-    int8_t status;
+    int8_t status; // Status of HAL functions success
     SAT_returnState return_state = SATR_OK; // OK until error encountered
+    uint16_t givenRuntime = 0;
+    int32_t maxRuntime = INT_MAX;
 
     switch (ser_subtype) {
     case DFGM_RUN: {
-        // Get runtime from packet (What data type to use for max value?)
-        int runtime;
-        cnv8_32(&packet->data[IN_DATA_BYTE], &runtime);
+        // Get runtime from packet
+        uint16_t tempGivenRuntime;
+        cnv8_16(&packet->data[IN_DATA_BYTE], &tempGivenRuntime);
+        givenRuntime = (int32_t) tempGivenRuntime;
 
-        // Run DFGM Task for amount of seconds in runtime
-        status = HAL_DFGM_run(runtime);
+        // Tell DFGM Task to run for the exact amount of seconds specified by givenRuntime
+        status = HAL_DFGM_run(givenRuntime);
 
         // Return success status of subservice
         memcpy(&packet->data[STATUS_BYTE], &status, sizeof(int8_t));
@@ -137,8 +144,8 @@ SAT_returnState dfgm_service_app(csp_packet_t *packet) {
     }
 
     case DFGM_START: {
-        // Run DFGM Task for INT_MAX seconds
-        status = HAL_DFGM_run(INT_MAX);
+        // Tell DFGM Task to run indefinitely. INT_MAX is big enough to be considered an indefinite runtime (~68.05 yrs)
+        status = HAL_DFGM_run(maxRuntime);
 
         // Return success status of subservice
         memcpy(&packet->data[STATUS_BYTE], &status, sizeof(int8_t));
@@ -147,7 +154,7 @@ SAT_returnState dfgm_service_app(csp_packet_t *packet) {
     }
 
     case DFGM_STOP: {
-        // Interrupt the task if it's running
+        // Tell DFGM Task to stop running. No effect/consequences if the Task isn't running.
         status = HAL_DFGM_stop();
 
         // Return success status of subservice
@@ -157,12 +164,15 @@ SAT_returnState dfgm_service_app(csp_packet_t *packet) {
     }
 
     case DFGM_FILTER: {
-        // Get filter mode (either 10 Hz or 1 Hz)
-        uint8_t filter_mode = (uint8_t)packet->data[IN_DATA_BYTE];
+        DFGM_Filter_Settings dfgm_filter_settings;
 
-        // if else statement here for 2 different HAL functions or an if else statement in the HAL function
-        status = HAL_DFGM_filterTo10Hz();
-        status = HAL_DFGM_filterTo1Hz();
+        // Get filter settings
+        dfgm_filter_settings.filterMode = (uint8_t) packet->data[IN_DATA_BYTE];
+        cnv8_32(&packet->data[IN_DATA_BYTE + 1], &dfgm_filter_settings.startTime);
+        cnv8_32(&packet->data[IN_DATA_BYTE + 5], &dfgm_filter_settings.endTime);
+
+        // Execute filter
+        status = HAL_DFGM_filter(&dfgm_filter_settings);
 
         // Return success status of subservice
         memcpy(&packet->data[STATUS_BYTE], &status, sizeof(int8_t));
@@ -175,10 +185,21 @@ SAT_returnState dfgm_service_app(csp_packet_t *packet) {
         DFGM_Housekeeping HK;
         status = HAL_DFGM_getHK(&HK); // Should check if HK is most recent
 
-        // Convert data types into what's used in packet (refer to line 252 of communication_service.c)
-        //HK.attribute1 = csp_htonflt(HK.attribute1);
+        // Convert floats from host byte order to server byte order
+        HK.coreVoltage = csp_htonflt(HK.coreVoltage);
+        HK.sensorTemp = csp_htonflt(HK.sensorTemp);
+        HK.refTemp = csp_htonflt(HK.refTemp);
+        HK.boardTemp = csp_htonflt(HK.boardTemp);
+        HK.posRailVoltage = csp_htonflt(HK.posRailVoltage);
+        HK.inputVoltage = csp_htonflt(HK.inputVoltage);
+        HK.refVoltage = csp_htonflt(HK.refVoltage);
+        HK.inputCurrent = csp_htonflt(HK.inputCurrent);
+        HK.reserved1 = csp_htonflt(HK.reserved1);
+        HK.reserved2 = csp_htonflt(HK.reserved2);
+        HK.reserved3 = csp_htonflt(HK.reserved3);
+        HK.reserved4 = csp_htonflt(HK.reserved4);
 
-        // Return success status of subservice
+        // Return success status of subservice + HK data
         memcpy(&packet->data[STATUS_BYTE], &status, sizeof(int8_t));
         memcpy(&packet->data[OUT_DATA_BYTE], &HK, sizeof(HK));
         set_packet_length(packet, sizeof(int8_t) + sizeof(HK) + 1);
@@ -191,9 +212,4 @@ SAT_returnState dfgm_service_app(csp_packet_t *packet) {
     }
 
     return return_state;
-    }
 }
-
-
-
-
