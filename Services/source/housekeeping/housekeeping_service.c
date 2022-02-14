@@ -378,6 +378,8 @@ Result collect_hk_from_devices(All_systems_housekeeping *all_hk_data) {
     UHF_return UHF_return_code = UHF_getHK(&all_hk_data->UHF_hk);      // UHF get housekeeping
     STX_return STX_return_code = HAL_S_getHK(&all_hk_data->S_band_hk); // S_band get housekeeping
 
+    DFGM_return DFGM_return_code = HAL_DFGM_getHK(&all_hk_data->DFGM_hk);
+
 #ifdef HYPERION_PANEL_3U
     Hyperion_config1_getHK(&all_hk_data->hyperion_hk);
 #endif /* HYPERION_PANEL_3U */

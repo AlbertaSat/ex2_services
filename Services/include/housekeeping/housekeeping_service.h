@@ -31,6 +31,7 @@
 #include "hyperion.h"
 #include "sband.h"
 #include "uhf.h"
+#include "dfgm.h"
 
 /* Housekeeping service address & port*/
 
@@ -49,7 +50,7 @@ typedef enum { SUCCESS = 0, FAILURE = 1 } Result;
 typedef enum { GET_HK = 0, SET_MAX_FILES = 1, GET_MAX_FILES = 2 } subservice;
 
 /*hk data sample*/
-typedef enum { EPS, ADCS, OBC, COMMS } hardware;
+typedef enum { EPS, ADCS, OBC, COMMS, DFGM } hardware;
 
 /*--------------hk data----------------*/
 
@@ -71,6 +72,8 @@ typedef struct __attribute__((packed)) {
     UHF_housekeeping UHF_hk;              // UHF status struct
     Sband_Housekeeping S_band_hk;         // S-band housekeeping struct
     Hyperion_HouseKeeping hyperion_hk;    // Hyperion housekeeping
+
+    DFGM_Housekeeping DFGM_hk;            // DFGM housekeeping struct
 } All_systems_housekeeping;
 
 SAT_returnState start_housekeeping_service(void);
