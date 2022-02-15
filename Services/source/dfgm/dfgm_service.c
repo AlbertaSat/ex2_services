@@ -96,7 +96,6 @@ SAT_returnState start_dfgm_service(void) {
     TaskHandle_t svc_tsk;
     taskFunctions svc_funcs = {0};
     svc_funcs.getCounterFunction = get_svc_wdt_counter;
-    dfgm_init(); // Start up the DFGM RX Task that collects data
 
     if (xTaskCreate((TaskFunction_t)dfgm_service, "dfgm_service", 1024, NULL,
                     NORMAL_SERVICE_PRIO, &svc_tsk) != pdPASS) {

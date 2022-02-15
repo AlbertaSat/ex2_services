@@ -23,6 +23,7 @@
 #include <csp/csp.h>
 #include <os_task.h>
 
+#include "communication/communication_service.h"
 #include "dfgm/dfgm_service.h"
 #include "general.h"
 #include "housekeeping/housekeeping_service.h"
