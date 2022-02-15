@@ -33,6 +33,14 @@
 #include "rtcmk.h"
 #include "rtc.h"
 
+char fileName1[] = "VOL0:/gs_cmds.TMP";
+char fileName2[] = "VOL0:/gs_cmds_rep.TMP";
+static number_of_cmds_t num_of_cmds;
+char EOL = '\n';
+char space = ' ';
+char asterisk = '*';
+int delay_aborted = 0;
+
 #define MAX_NUM_CMDS 2
 #define MAX_CMD_LENGTH 50
 #define MAX_BUFFER_LENGTH 500
@@ -67,15 +75,9 @@ typedef struct __attribute__((packed)) {
 typedef struct __attribute__((packed)) {
     // TODO: determine if second accuracy is needed
     uint32_t unix_time;
+    uint32_t frequency; //frequency the cmd needs to be executed in seconds, value of 0 means the cmd is not repeated
     char gs_command[MAX_CMD_LENGTH]; // place holder for storing commands, increase/decrease size as needed
 } scheduled_commands_unix_t;
-
-typedef struct __attribute__((packed)) {
-    // TODO: determine if second accuracy is needed
-    uint32_t unix_time;
-    uint32_t frequency; //frequency the cmd needs to be executed in seconds
-    char gs_command[MAX_CMD_LENGTH]; // place holder for storing commands, increase/decrease size as needed
-} repeated_commands_t;
 
 typedef struct __attribute__((packed)) {
     // TODO: determine if second accuracy is needed
@@ -85,11 +87,12 @@ typedef struct __attribute__((packed)) {
 
 //scheduled_commands_t scheduled_command[MAX_NUM_CMDS];
 
-Result collect_scheduled_cmds(scheduled_commands_t *gs_cmds);
+SAT_returnState gs_cmds_scheduler_service_app(csp_packet_t *gs_cmds);
 SAT_returnState get_scheduled_gs_command();
-static inline void prv_set_gs_scheduler(char *cmd_buff);
-SAT_returnState sort_scheduled_cmds (scheduled_commands_t* cmds, int number_of_cmds);
-Result execute_non_rep_gs_cmds(void *pvParameters);
+SAT_returnState calc_cmd_frequency(scheduled_commands_t* cmds, int number_of_cmds, scheduled_commands_unix_t *sorted_cmds);
+SAT_returnState sort_cmds(scheduled_commands_unix_t *sorted_cmds, int number_of_cmds);
+Result execute_non_rep_gs_cmds(void);
+Result execute_rep_gs_cmds(void);
 static scheduled_commands_t *prv_get_cmds_scheduler();
 
 #endif /* EX2_SYSTEM_INCLUDE_GS_COMMAND_SCHEDULER_H_ */
