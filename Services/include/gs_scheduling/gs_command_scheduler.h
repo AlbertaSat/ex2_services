@@ -51,7 +51,7 @@ int delay_aborted = 0;
 
 static char cmd_buff[MAX_BUFFER_LENGTH];
 
-typedef enum { SUCCESS = 0, FAILURE = 1 } Result;
+typedef enum { SUCCESS = 0, FAILURE = 1 } Scheduler_Result;
 
 struct tm {
    uint8_t tm_sec;         /* seconds, range 0 to 59, use * for repetition */
@@ -91,8 +91,8 @@ SAT_returnState gs_cmds_scheduler_service_app(csp_packet_t *gs_cmds);
 SAT_returnState get_scheduled_gs_command();
 SAT_returnState calc_cmd_frequency(scheduled_commands_t* cmds, int number_of_cmds, scheduled_commands_unix_t *sorted_cmds);
 SAT_returnState sort_cmds(scheduled_commands_unix_t *sorted_cmds, int number_of_cmds);
-Result execute_non_rep_gs_cmds(void);
-Result execute_rep_gs_cmds(void);
+Scheduler_Result execute_non_rep_gs_cmds(void);
+Scheduler_Result execute_rep_gs_cmds(void);
 static scheduled_commands_t *prv_get_cmds_scheduler();
 
 #endif /* EX2_SYSTEM_INCLUDE_GS_COMMAND_SCHEDULER_H_ */

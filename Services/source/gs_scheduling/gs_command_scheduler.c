@@ -29,11 +29,11 @@
 SAT_returnState gs_cmds_scheduler_service_app(csp_packet_t *gs_cmds) {
     TaskHandle_t SchedulerHandler;
     // allocating buffer for MAX_NUM_CMDS numbers of incoming commands
-    scheduled_commands_t cmds = (scheduled_commands_t*)calloc(MAX_NUM_CMDS * sizeof(scheduled_commands_t));
+    scheduled_commands_t *cmds = (scheduled_commands_t*)calloc(MAX_NUM_CMDS, sizeof(scheduled_commands_t));
     // parse the commands
     int number_of_cmds = prv_set_gs_scheduler(&gs_cmds, &cmds);
     // calculate frequency of cmds. Non-repetitive commands have a frequency of 0
-    scheduled_commands_unix_t sorted_cmds = (scheduled_commands_unix_t*)calloc(number_of_cmds * sizeof(scheduled_commands_unix_t));
+    scheduled_commands_unix_t *sorted_cmds = (scheduled_commands_unix_t*)calloc(number_of_cmds, sizeof(scheduled_commands_unix_t));
     calc_cmd_frequency(&cmds, number_of_cmds, &sorted_cmds);
     // open file that stores the cmds in the SD card
     int32_t fout = red_open(fileName1, RED_O_RDONLY | RED_O_RDWR);
@@ -65,8 +65,8 @@ SAT_returnState gs_cmds_scheduler_service_app(csp_packet_t *gs_cmds) {
         uint32_t num_existing_cmds = scheduler_stat.st_size / sizeof(scheduled_commands_unix_t);
         int total_cmds = number_of_cmds + num_existing_cmds;
         // TODO: use error handling to check calloc was successful
-        scheduled_commands_unix_t existing_cmds = (scheduled_commands_unix_t*)calloc(num_existing_cmds * sizeof(scheduled_commands_unix_t));
-        scheduled_commands_unix_t updated_cmds = (scheduled_commands_unix_t*)calloc(total_cmds * sizeof(scheduled_commands_unix_t));
+        scheduled_commands_unix_t *existing_cmds = (scheduled_commands_unix_t*)calloc(num_existing_cmds, sizeof(scheduled_commands_unix_t));
+        scheduled_commands_unix_t *updated_cmds = (scheduled_commands_unix_t*)calloc(total_cmds, sizeof(scheduled_commands_unix_t));
         // read file
         int32_t f_read = red_read(fout, &existing_cmds, (uint32_t)scheduler_stat.st_size);
         if (f_read == -1) {
@@ -76,8 +76,8 @@ SAT_returnState gs_cmds_scheduler_service_app(csp_packet_t *gs_cmds) {
             return FAILURE;
         }
         // combine new commands and old commands into a single struct for sorting
-        memcpy(updated_cmds,sorted_cmds,sizeof(sorted_cmds));
-        memcpy((updated_cmds+number_of_cmds),existing_cmds,sizeof(existing_cmds));
+        memcpy(&updated_cmds,&sorted_cmds,sizeof(sorted_cmds));
+        memcpy((updated_cmds+number_of_cmds),&existing_cmds,sizeof(existing_cmds));
         sort_cmds(&updated_cmds, total_cmds);
         // write new cmds to file
         write_cmds_to_file(1, &updated_cmds, total_cmds, fileName1);
@@ -107,7 +107,7 @@ SAT_returnState gs_cmds_scheduler_service_app(csp_packet_t *gs_cmds) {
  *      Parse and store groundstation commands from the buffer to the array @param cmds
  * @param cmd_buff
  *      pointer to the buffer that stores the groundstation commands
- * @return Result
+ * @return Scheduler_Result
  *      FAILURE or SUCCESS
  */
 int prv_set_gs_scheduler(char *cmd_buff, scheduled_commands_t *cmds) {
@@ -392,8 +392,8 @@ int prv_set_gs_scheduler(char *cmd_buff, scheduled_commands_t *cmds) {
 SAT_returnState calc_cmd_frequency(scheduled_commands_t *cmds, int number_of_cmds, scheduled_commands_unix_t *sorted_cmds) {
     /*--------------------------------Initialize structures to store sorted commands--------------------------------*/
     //TODO: Confirm that the entire struct has been initialized with zeros
-    scheduled_commands_unix_t* non_reoccurring_cmds = (scheduled_commands_unix_t*)calloc(number_of_cmds,sizeof(scheduled_commands_unix_t));
-    scheduled_commands_t* reoccurring_cmds = (scheduled_commands_t*)calloc(number_of_cmds,sizeof(scheduled_commands_t));
+    scheduled_commands_unix_t *non_reoccurring_cmds = (scheduled_commands_unix_t*)calloc(number_of_cmds, sizeof(scheduled_commands_unix_t));
+    scheduled_commands_t *reoccurring_cmds = (scheduled_commands_t*)calloc(number_of_cmds, sizeof(scheduled_commands_t));
     num_of_cmds.non_rep_cmds = 0;
     num_of_cmds.rep_cmds = 0;
 
@@ -435,7 +435,7 @@ SAT_returnState calc_cmd_frequency(scheduled_commands_t *cmds, int number_of_cmd
     /*--------------------------------calculate the frequency of repeated cmds--------------------------------*/
     struct tm time_buff;
     //TODO: check that all callocs have been freed
-    scheduled_commands_unix_t* repeated_cmds_buff = (scheduled_commands_unix_t*)calloc(j_rep, sizeof(scheduled_commands_unix_t));
+    scheduled_commands_unix_t *repeated_cmds_buff = (scheduled_commands_unix_t*)calloc(j_rep, sizeof(scheduled_commands_unix_t));
     // Obtain the soonest time that the command will be executed, and calculate the frequency it needs to be executed at
     for (int j=0; j < j_rep; j++) {
         time_buff.tm_isdst = (reoccurring_cmds+j)->scheduled_time.tm_isdst;
@@ -555,10 +555,10 @@ SAT_returnState sort_cmds(scheduled_commands_unix_t *sorted_cmds, int number_of_
  *     uint16_t number to seek to in file
  * @param scheduled_cmds
  *      Struct containing groundstation commands to be executed at a given time
- * @return Result
+ * @return Scheduler_Result
  *      FAILURE or SUCCESS
  */
-Result write_cmds_to_file(uint16_t filenumber, scheduled_commands_unix_t *scheduled_cmds, int number_of_cmds, char fileName) {
+Scheduler_Result write_cmds_to_file(uint16_t filenumber, scheduled_commands_unix_t *scheduled_cmds, int number_of_cmds, char fileName) {
     int32_t fout = red_open(fileName, RED_O_CREAT | RED_O_RDWR); // open or create file to write binary
     if (fout == -1) {
         printf("Unexpected error %d from red_open()\r\n", (int)red_errno);
