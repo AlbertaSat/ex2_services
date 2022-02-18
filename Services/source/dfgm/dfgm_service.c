@@ -162,23 +162,6 @@ SAT_returnState dfgm_service_app(csp_packet_t *packet) {
         break;
     }
 
-    case DFGM_FILTER: {
-        DFGM_Filter_Settings dfgm_filter_settings;
-
-        // Get filter settings
-        dfgm_filter_settings.filterMode = (uint8_t) packet->data[IN_DATA_BYTE];
-        cnv8_32(&packet->data[IN_DATA_BYTE + 1], &dfgm_filter_settings.startTime);
-        cnv8_32(&packet->data[IN_DATA_BYTE + 5], &dfgm_filter_settings.endTime);
-
-        // Execute filter
-        status = HAL_DFGM_filter(&dfgm_filter_settings);
-
-        // Return success status of subservice
-        memcpy(&packet->data[STATUS_BYTE], &status, sizeof(int8_t));
-        set_packet_length(packet, sizeof(int8_t) + 1);
-        break;
-    }
-
     case DFGM_GET_HK: {
         // Get DFGM HK data
         DFGM_Housekeeping HK;

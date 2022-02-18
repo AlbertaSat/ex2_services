@@ -32,7 +32,6 @@ typedef enum {
     DFGM_RUN = 0,
     DFGM_START,
     DFGM_STOP,
-    DFGM_FILTER,
     DFGM_GET_HK
 } DFGM_Subtype;
 
