@@ -31,11 +31,11 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include "rtcmk.h"
-#include "rtc.h"
+#include "csp_types.h"
+#include "ex2_time.h"
 
 char fileName1[] = "VOL0:/gs_cmds.TMP";
 char fileName2[] = "VOL0:/gs_cmds_rep.TMP";
-static number_of_cmds_t num_of_cmds;
 char EOL = '\n';
 char space = ' ';
 char asterisk = '*';
@@ -53,22 +53,23 @@ static char cmd_buff[MAX_BUFFER_LENGTH];
 
 typedef enum { SUCCESS = 0, FAILURE = 1 } Scheduler_Result;
 
-struct tm {
-   uint8_t tm_sec;         /* seconds, range 0 to 59, use * for repetition */
-   uint8_t tm_min;         /* minutes, range 0 to 59, use * for repetition */
-   uint8_t tm_hour;        /* hours, range 0 to 23, use * for repetition   */
-   uint8_t tm_mday;        /* day of the month, range 1 to 31              */
-   uint8_t tm_mon;         /* month, range 0 to 11                         */
-   uint8_t tm_year;        /* The number of years since 1900               */
-   uint8_t tm_wday;        /* day of the week, range 0 to 6                */
-   uint16_t tm_yday;       /* day in the year, range 0 to 365              */
-   uint8_t tm_isdst;       /* daylight saving time                         */	
-};
+//struct tm {
+//   uint8_t tm_sec;         /* seconds, range 0 to 59, use * for repetition */
+//   uint8_t tm_min;         /* minutes, range 0 to 59, use * for repetition */
+//   uint8_t tm_hour;        /* hours, range 0 to 23, use * for repetition   */
+//   uint8_t tm_mday;        /* day of the month, range 1 to 31              */
+//   uint8_t tm_mon;         /* month, range 0 to 11                         */
+//   uint8_t tm_year;        /* The number of years since 1900               */
+//   uint8_t tm_wday;        /* day of the week, range 0 to 6                */
+//   uint16_t tm_yday;       /* day in the year, range 0 to 365              */
+//   uint8_t tm_isdst;       /* daylight saving time                         */
+//}
+
 
 // Structure inspired by: https://man7.org/linux/man-pages/man5/crontab.5.html
 typedef struct __attribute__((packed)) {
     // TODO: determine if second accuracy is needed
-    struct tm scheduled_time;
+    tmElements_t scheduled_time;
     char gs_command[MAX_CMD_LENGTH]; // place holder for storing commands, increase/decrease size as needed
 } scheduled_commands_t;
 
@@ -85,9 +86,12 @@ typedef struct __attribute__((packed)) {
     uint8 rep_cmds;
 } number_of_cmds_t;
 
+static number_of_cmds_t num_of_cmds;
+
 //scheduled_commands_t scheduled_command[MAX_NUM_CMDS];
 
 SAT_returnState gs_cmds_scheduler_service_app(csp_packet_t *gs_cmds);
+SAT_returnState start_gs_scheduler_service(void *param);
 SAT_returnState get_scheduled_gs_command();
 SAT_returnState calc_cmd_frequency(scheduled_commands_t* cmds, int number_of_cmds, scheduled_commands_unix_t *sorted_cmds);
 SAT_returnState sort_cmds(scheduled_commands_unix_t *sorted_cmds, int number_of_cmds);

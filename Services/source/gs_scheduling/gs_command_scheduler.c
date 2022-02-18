@@ -137,10 +137,10 @@ int prv_set_gs_scheduler(char *cmd_buff, scheduled_commands_t *cmds) {
         //Single digit
         if (str_position_2 - str_position_1 == 1) {
             if (cmd_buff[str_position_1 - 1] == asterisk) {
-                (cmds + number_of_cmds)->scheduled_time.tm_sec = ASTERISK;
+                (cmds + number_of_cmds)->scheduled_time.Second = ASTERISK;
             }
             else {
-                (cmds + number_of_cmds)->scheduled_time.tm_sec = atoi(cmd_buff[str_position_1 - 1]);
+                (cmds + number_of_cmds)->scheduled_time.Second = atoi(cmd_buff[str_position_1 - 1]);
             }
         }
         //Multiple digits
@@ -151,7 +151,7 @@ int prv_set_gs_scheduler(char *cmd_buff, scheduled_commands_t *cmds) {
             memset(substring, "", (str_position_2 - old_str_position));
             memcpy(substring, cmd_buff[old_str_position], (str_position_2 - old_str_position));
             //Convert string in the buffer into integer value
-            (cmds + number_of_cmds)->scheduled_time.tm_sec = atoi(substring);
+            (cmds + number_of_cmds)->scheduled_time.Second = atoi(substring);
         }
         old_str_position = str_position_2;
         str_position_1 = str_position_2;
@@ -170,10 +170,10 @@ int prv_set_gs_scheduler(char *cmd_buff, scheduled_commands_t *cmds) {
         //Single digit value
         if (str_position_2 - str_position_1 == 1) {
             if (cmd_buff[str_position_1 - 1] == asterisk) {
-                (cmds + number_of_cmds)->scheduled_time.tm_min = ASTERISK;
+                (cmds + number_of_cmds)->scheduled_time.Minute = ASTERISK;
             }
             else {
-                (cmds + number_of_cmds)->scheduled_time.tm_min = atoi(cmd_buff[str_position_1 - 1]);
+                (cmds + number_of_cmds)->scheduled_time.Minute = atoi(cmd_buff[str_position_1 - 1]);
             }
         }
         //Multiple digits
@@ -184,7 +184,7 @@ int prv_set_gs_scheduler(char *cmd_buff, scheduled_commands_t *cmds) {
             memset(substring, "", (str_position_2 - old_str_position));
             memcpy(substring, cmd_buff[old_str_position], (str_position_2 - old_str_position));
             //Convert string in the buffer into integer value
-            (cmds + number_of_cmds)->scheduled_time.tm_min = atoi(substring);
+            (cmds + number_of_cmds)->scheduled_time.Minute = atoi(substring);
         }
         old_str_position = str_position_2;
         str_position_1 = str_position_2;
@@ -203,10 +203,10 @@ int prv_set_gs_scheduler(char *cmd_buff, scheduled_commands_t *cmds) {
         //Single digit value
         if (str_position_2 - str_position_1 == 1) {
             if (cmd_buff[str_position_1 - 1] == asterisk) {
-                (cmds + number_of_cmds)->scheduled_time.tm_hour = ASTERISK;
+                (cmds + number_of_cmds)->scheduled_time.Minute = ASTERISK;
             }
             else {
-                (cmds + number_of_cmds)->scheduled_time.tm_hour = atoi(cmd_buff[str_position_1 - 1]);
+                (cmds + number_of_cmds)->scheduled_time.Minute = atoi(cmd_buff[str_position_1 - 1]);
             }
         }
         //Multiple digits
@@ -217,40 +217,7 @@ int prv_set_gs_scheduler(char *cmd_buff, scheduled_commands_t *cmds) {
             memset(substring, "", (str_position_2 - old_str_position));
             memcpy(substring, cmd_buff[old_str_position], (str_position_2 - old_str_position));
             //Convert string in the buffer into integer value
-            (cmds + number_of_cmds)->scheduled_time.tm_hour = atoi(substring);
-        }
-        old_str_position = str_position_2;
-        str_position_1 = str_position_2;
-        str_position_1++;
-
-        /*-----------------------Fetch day of the month-----------------------*/
-        //Count the number of digits
-        if (cmd_buff[str_position_1] != space) {
-            str_position_1++;
-        }
-        str_position_2 = str_position_1;
-        //Count the number of spaces following the digits
-        if (cmd_buff[str_position_2] == space) {
-            str_position_2++;
-        }
-        //Single digit value
-        if (str_position_2 - str_position_1 == 1) {
-            if (cmd_buff[str_position_1 - 1] == asterisk) {
-                (cmds + number_of_cmds)->scheduled_time.tm_mday = ASTERISK;
-            }
-            else {
-                (cmds + number_of_cmds)->scheduled_time.tm_mday = atoi(cmd_buff[str_position_1 - 1]);
-            }
-        }
-        //Multiple digits
-        if (str_position_2 - str_position_1 != 1) {
-            //Create a buffer to store characters before the space
-            char substring [str_position_2 - old_str_position];
-            //Initialize buffer
-            memset(substring, "", (str_position_2 - old_str_position));
-            memcpy(substring, cmd_buff[old_str_position], (str_position_2 - old_str_position));
-            //Convert string in the buffer into integer value
-            (cmds + number_of_cmds)->scheduled_time.tm_mday = atoi(substring);
+            (cmds + number_of_cmds)->scheduled_time.Hour = atoi(substring);
         }
         old_str_position = str_position_2;
         str_position_1 = str_position_2;
@@ -269,10 +236,10 @@ int prv_set_gs_scheduler(char *cmd_buff, scheduled_commands_t *cmds) {
         //Single digit value
         if (str_position_2 - str_position_1 == 1) {
             if (cmd_buff[str_position_1 - 1] == asterisk) {
-                (cmds + number_of_cmds)->scheduled_time.tm_mon = ASTERISK;
+                (cmds + number_of_cmds)->scheduled_time.Month = ASTERISK;
             }
             else {
-                (cmds + number_of_cmds)->scheduled_time.tm_mon = atoi(cmd_buff[str_position_1 - 1]);
+                (cmds + number_of_cmds)->scheduled_time.Month = atoi(cmd_buff[str_position_1 - 1]);
             }
         }
         //Multiple digits
@@ -283,7 +250,7 @@ int prv_set_gs_scheduler(char *cmd_buff, scheduled_commands_t *cmds) {
             memset(substring, "", (str_position_2 - old_str_position));
             memcpy(substring, cmd_buff[old_str_position], (str_position_2 - old_str_position));
             //Convert string in the buffer into integer value
-            (cmds + number_of_cmds)->scheduled_time.tm_mon = atoi(substring);
+            (cmds + number_of_cmds)->scheduled_time.Month = atoi(substring);
         }
         old_str_position = str_position_2;
         str_position_1 = str_position_2;
@@ -302,10 +269,10 @@ int prv_set_gs_scheduler(char *cmd_buff, scheduled_commands_t *cmds) {
         //Single digit value
         if (str_position_2 - str_position_1 == 1) {
             if (cmd_buff[str_position_1 - 1] == asterisk) {
-                (cmds + number_of_cmds)->scheduled_time.tm_year = ASTERISK;
+                (cmds + number_of_cmds)->scheduled_time.Year = ASTERISK;
             }
             else {
-                (cmds + number_of_cmds)->scheduled_time.tm_year = atoi(cmd_buff[str_position_1 - 1]);
+                (cmds + number_of_cmds)->scheduled_time.Year = atoi(cmd_buff[str_position_1 - 1]);
             }
         }
         //Multiple digits
@@ -316,7 +283,7 @@ int prv_set_gs_scheduler(char *cmd_buff, scheduled_commands_t *cmds) {
             memset(substring, "", (str_position_2 - old_str_position));
             memcpy(substring, cmd_buff[old_str_position], (str_position_2 - old_str_position));
             //Convert string in the buffer into integer value
-            (cmds + number_of_cmds)->scheduled_time.tm_year = atoi(substring);
+            (cmds + number_of_cmds)->scheduled_time.Year = atoi(substring);
         }
         old_str_position = str_position_2;
         str_position_1 = str_position_2;
@@ -335,10 +302,10 @@ int prv_set_gs_scheduler(char *cmd_buff, scheduled_commands_t *cmds) {
         //Single digit value
         if (str_position_2 - str_position_1 == 1) {
             if (cmd_buff[str_position_1 - 1] == asterisk) {
-                (cmds + number_of_cmds)->scheduled_time.tm_wday = ASTERISK;
+                (cmds + number_of_cmds)->scheduled_time.Wday = ASTERISK;
             }
             else {
-                (cmds + number_of_cmds)->scheduled_time.tm_wday = atoi(cmd_buff[str_position_1 - 1]);
+                (cmds + number_of_cmds)->scheduled_time.Wday = atoi(cmd_buff[str_position_1 - 1]);
             }
         }
         //Multiple digits
@@ -349,7 +316,7 @@ int prv_set_gs_scheduler(char *cmd_buff, scheduled_commands_t *cmds) {
             memset(substring, "", (str_position_2 - old_str_position));
             memcpy(substring, cmd_buff[old_str_position], (str_position_2 - old_str_position));
             //Convert string in the buffer into integer value
-            (cmds + number_of_cmds)->scheduled_time.tm_wday = atoi(substring);
+            (cmds + number_of_cmds)->scheduled_time.Wday = atoi(substring);
         }
         old_str_position = str_position_2;
         str_position_1 = str_position_2;
@@ -403,17 +370,17 @@ SAT_returnState calc_cmd_frequency(scheduled_commands_t *cmds, int number_of_cmd
 
     for (int j = 0; j < number_of_cmds; j++) {
         // Separate the non-repetitve and repetitve commands, the sum of time fields should not exceed the value of ASTERISK (255) if non-repetitive
-        if ((cmds+j)->scheduled_time.tm_sec + (cmds+j)->scheduled_time.tm_min + (cmds+j)->scheduled_time.tm_hour + (cmds+j)->scheduled_time.tm_mday + (cmds+j)->scheduled_time.tm_mon < ASTERISK) {
+        if ((cmds+j)->scheduled_time.Second + (cmds+j)->scheduled_time.Minute + (cmds+j)->scheduled_time.Hour + (cmds+j)->scheduled_time.Month < ASTERISK) {
 
             // Store the non-repetitve commands into the new struct non_reoccurring_cmds
             if (j_non_rep < number_of_cmds) {
                 // Convert the time into unix time for sorting convenience
-                unix_time_buff = mktime(&cmds->scheduled_time);
+                unix_time_buff = makeTime(cmds->scheduled_time);
                 (non_reoccurring_cmds+j_non_rep)->unix_time = unix_time_buff;
                 if( unix_time_buff == -1 ) {
                     // TODO: create error handling routine to handle this error during cmd sorting and execution
-                    ex2_log("Error: unable to make time using mktime\n");
-                    // TODO: delete this cmd if mktime fails
+                    ex2_log("Error: unable to make time using makeTime\n");
+                    // TODO: delete this cmd if makeTime fails
                 }
                 memcpy((non_reoccurring_cmds+j_non_rep)->gs_command, (cmds+j)->gs_command, MAX_CMD_LENGTH);
                 (non_reoccurring_cmds+j_non_rep)->frequency = 0; //set frequency to zero for non-repetitive cmds
@@ -433,52 +400,50 @@ SAT_returnState calc_cmd_frequency(scheduled_commands_t *cmds, int number_of_cmd
     num_of_cmds.rep_cmds = j_rep;
 
     /*--------------------------------calculate the frequency of repeated cmds--------------------------------*/
-    struct tm time_buff;
+    struct tmElements_t time_buff;
     //TODO: check that all callocs have been freed
     scheduled_commands_unix_t *repeated_cmds_buff = (scheduled_commands_unix_t*)calloc(j_rep, sizeof(scheduled_commands_unix_t));
     // Obtain the soonest time that the command will be executed, and calculate the frequency it needs to be executed at
     for (int j=0; j < j_rep; j++) {
-        time_buff.tm_isdst = (reoccurring_cmds+j)->scheduled_time.tm_isdst;
-        time_buff.tm_yday = (reoccurring_cmds+j)->scheduled_time.tm_yday;
-        time_buff.tm_wday = (reoccurring_cmds+j)->scheduled_time.tm_wday;
-        time_buff.tm_mon = (reoccurring_cmds+j)->scheduled_time.tm_mon;
-        time_buff.tm_mday = (reoccurring_cmds+j)->scheduled_time.tm_mday;
+        time_buff.Wday = (reoccurring_cmds+j)->scheduled_time.Wday;
+        time_buff.Month = (reoccurring_cmds+j)->scheduled_time.Month;
         memcpy((reoccurring_cmds+j)->gs_command,(repeated_cmds_buff+j)->gs_command,sizeof((repeated_cmds_buff+j)->gs_command));
         // If command repeats every second
-        if ((reoccurring_cmds+j)->scheduled_time.tm_hour == asterisk && (reoccurring_cmds+j)->scheduled_time.tm_min == asterisk && (reoccurring_cmds+j)->scheduled_time.tm_sec == asterisk) {
+        if ((reoccurring_cmds+j)->scheduled_time.Hour == asterisk && (reoccurring_cmds+j)->scheduled_time.Minute == asterisk && (reoccurring_cmds+j)->scheduled_time.Second == asterisk) {
             //TODO: consider edge cases where the hour increases as soon as this function is executed - complete
-            RTCMK_ReadHours(RTCMK_ADDR, &time_buff.tm_hour);
-            RTCMK_ReadMinutes(RTCMK_ADDR, &time_buff.tm_min);
-            RTCMK_ReadSeconds(RTCMK_ADDR, &time_buff.tm_sec);
+            RTCMK_ReadHours(RTCMK_ADDR, &time_buff.Hour);
+            RTCMK_ReadMinutes(RTCMK_ADDR, &time_buff.Minute);
+            RTCMK_ReadSeconds(RTCMK_ADDR, &time_buff.Second);
             //convert the first execution time into unix time. Add 60 seconds to allow processing time
-            (repeated_cmds_buff+j)->unix_time = mktime(&time_buff) + 60;
+            (repeated_cmds_buff+j)->unix_time = makeTime(time_buff) + 60;
             (repeated_cmds_buff+j)->frequency = 1; //1 second
             continue;
         }
         // If command repeats every minute
-        if ((reoccurring_cmds+j)->scheduled_time.tm_hour == asterisk && (reoccurring_cmds+j)->scheduled_time.tm_min == asterisk) {
+        if ((reoccurring_cmds+j)->scheduled_time.Hour == asterisk && (reoccurring_cmds+j)->scheduled_time.Minute == asterisk) {
             //TODO: consider edge cases where the hour increases as soon as this function is executed - complete
-            RTCMK_ReadHours(RTCMK_ADDR, &time_buff.tm_hour);
-            RTCMK_ReadMinutes(RTCMK_ADDR, &time_buff.tm_min);
-            time_buff.tm_sec = (reoccurring_cmds+j)->scheduled_time.tm_sec;
+            RTCMK_ReadHours(RTCMK_ADDR, &time_buff.Hour);
+            RTCMK_ReadMinutes(RTCMK_ADDR, &time_buff.Minute);
+            time_buff.Second = (reoccurring_cmds+j)->scheduled_time.Second;
             //convert the first execution time into unix time. Add 60 seconds to allow processing time
-            (repeated_cmds_buff+j)->unix_time = mktime(&time_buff) + 60;
+            (repeated_cmds_buff+j)->unix_time = makeTime(time_buff) + 60;
             (repeated_cmds_buff+j)->frequency = 60; //1 min
             continue;
         }
         // If command repeats every hour
-        if ((reoccurring_cmds+j)->scheduled_time.tm_hour == asterisk) {
+        if ((reoccurring_cmds+j)->scheduled_time.Hour == asterisk) {
             //TODO: consider edge cases where the hour increases as soon as this function is executed - complete
-            RTCMK_ReadHours(RTCMK_ADDR, &time_buff.tm_hour);
-            time_buff.tm_min = (reoccurring_cmds+j)->scheduled_time.tm_min;
-            time_buff.tm_sec = (reoccurring_cmds+j)->scheduled_time.tm_sec;
+            RTCMK_ReadHours(RTCMK_ADDR, &time_buff.Hour);
+            time_buff.Minute = (reoccurring_cmds+j)->scheduled_time.Minute;
+            time_buff.Second = (reoccurring_cmds+j)->scheduled_time.Second;
             //convert the first execution time into unix time. If the hour is almost over, increase the hour by one
             time_t current_time;
-            if (mktime(&time_buff) - RTCMK_GetUnix(&current_time) < 60) {
-                (repeated_cmds_buff+j)->unix_time = mktime(&time_buff) + 3600;
+            time_t scheduled_time = makeTime(time_buff);
+            if (scheduled_time - RTCMK_GetUnix(&current_time) < 60) {
+                (repeated_cmds_buff+j)->unix_time = scheduled_time + 3600;
             }
             else {
-                (repeated_cmds_buff+j)->unix_time = mktime(&time_buff);
+                (repeated_cmds_buff+j)->unix_time = scheduled_time;
             }
             (repeated_cmds_buff+j)->frequency = 3600; //1 hr
             continue;
@@ -595,9 +560,9 @@ SAT_returnState start_gs_cmds_scheduler_service(void);
  * @details
  *      Accepts incoming gs scheduler packets and executes the application
  * @param void* param
- * @return None
+ * @return SAT_returnState
  */
-void gs_scheduler_service(void *param) {
+SAT_returnState start_gs_scheduler_service(void *param) {
     csp_socket_t *sock;
     sock = csp_socket(CSP_SO_RDPREQ);
     csp_bind(sock, TC_GS_SCHEDULER_SERVICE);
