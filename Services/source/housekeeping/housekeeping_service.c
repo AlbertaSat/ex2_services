@@ -352,6 +352,19 @@ Result mock_everyone(All_systems_housekeeping *all_hk_data) {
     all_hk_data->hyperion_hk.Star_Dep_Current = tempFloat;
     all_hk_data->hyperion_hk.Zenith_Current = tempFloat;
 
+    all_hk_data->DFGM_hk.coreVoltage = tempFloat;
+    all_hk_data->DFGM_hk.sensorTemp = tempFloat;
+    all_hk_data->DFGM_hk.refTemp = tempFloat;
+    all_hk_data->DFGM_hk.boardTemp = tempFloat;
+    all_hk_data->DFGM_hk.posRailVoltage = tempFloat;
+    all_hk_data->DFGM_hk.inputVoltage = tempFloat;
+    all_hk_data->DFGM_hk.refVoltage = tempFloat;
+    all_hk_data->DFGM_hk.inputCurrent = tempFloat;
+    all_hk_data->DFGM_hk.reserved1 = tempFloat;
+    all_hk_data->DFGM_hk.reserved2 = tempFloat;
+    all_hk_data->DFGM_hk.reserved3 = tempFloat;
+    all_hk_data->DFGM_hk.reserved4 = tempFloat;
+
     temp++;
     tempTime += 30;
     return SUCCESS;
@@ -378,7 +391,7 @@ Result collect_hk_from_devices(All_systems_housekeeping *all_hk_data) {
     UHF_return UHF_return_code = UHF_getHK(&all_hk_data->UHF_hk);      // UHF get housekeeping
     STX_return STX_return_code = HAL_S_getHK(&all_hk_data->S_band_hk); // S_band get housekeeping
 
-    DFGM_return DFGM_return_code = HAL_DFGM_getHK(&all_hk_data->DFGM_hk);
+    DFGM_return DFGM_return_code = HAL_DFGM_getHK(&all_hk_data->DFGM_hk); // DFGM get housekeeping
 
 #ifdef HYPERION_PANEL_3U
     Hyperion_config1_getHK(&all_hk_data->hyperion_hk);
@@ -562,6 +575,7 @@ Result read_hk_from_file(uint16_t filenumber, All_systems_housekeeping *all_hk_d
     red_read(fin, &all_hk_data->UHF_hk, sizeof(all_hk_data->UHF_hk));
     red_read(fin, &all_hk_data->S_band_hk, sizeof(all_hk_data->S_band_hk));
     red_read(fin, &all_hk_data->hyperion_hk, sizeof(all_hk_data->hyperion_hk));
+    // Add red_read for DFGM here if needed
 
     if (red_errno != 0) {
         ex2_log("Failed to read: '%c'\n", fileName);
