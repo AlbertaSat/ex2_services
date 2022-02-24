@@ -314,7 +314,7 @@ SAT_returnState adcs_service_app(csp_packet_t *packet) {
         break;
     }
     case ADCS_GET_FILE_INFO: {
-        ADCS_file_info file_info;
+        adcs_file_info file_info;
 
         status = HAL_ADCS_get_file_info(&file_info);
 
