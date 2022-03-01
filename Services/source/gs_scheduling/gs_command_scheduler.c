@@ -5,18 +5,14 @@
  *      Author: Grace Yi
  */
 
-#include "semphr.h"
-#include "services.h"
-#include "system.h"
-#include <FreeRTOS.h>
-#include <string.h>
-#include <csp/csp.h>
-#include "housekeeping_service.h"
-#include "task_manager.h"
 #include "gs_command_scheduler.h"
-#include "os_task.h"
-#include "services.h"
-#include <redposix.h> //include for file system
+
+char* fileName1 = "VOL0:/gs_cmds.TMP";
+
+//int EOL = '\n';
+//int space = ' ';
+//int asterisk = '*';
+int delay_aborted = 0;
 
 /**
  * @brief
@@ -34,7 +30,7 @@ SAT_returnState gs_cmds_scheduler_service_app(csp_packet_t *gs_cmds) {
     int number_of_cmds = prv_set_gs_scheduler(&gs_cmds, &cmds);
     // calculate frequency of cmds. Non-repetitive commands have a frequency of 0
     scheduled_commands_unix_t *sorted_cmds = (scheduled_commands_unix_t*)calloc(number_of_cmds, sizeof(scheduled_commands_unix_t));
-    calc_cmd_frequency(&cmds, number_of_cmds, &sorted_cmds);
+    calc_cmd_frequency(cmds, number_of_cmds, sorted_cmds);
     // open file that stores the cmds in the SD card
     int32_t fout = red_open(fileName1, RED_O_RDONLY | RED_O_RDWR);
 
@@ -43,7 +39,7 @@ SAT_returnState gs_cmds_scheduler_service_app(csp_packet_t *gs_cmds) {
         // sort the commands
         sort_cmds(&sorted_cmds, number_of_cmds);
         // write cmds to file
-        write_cmds_to_file(1, &sorted_cmds, number_of_cmds, fileName1);
+        write_cmds_to_file(1, sorted_cmds, number_of_cmds, fileName1);
         // create the scheduler
         //TODO: review stack size
         xTaskCreate(vSchedulerHandler, "scheduler", 1000, NULL, GS_SCHEDULER_TASK_PRIO, SchedulerHandler);
@@ -59,7 +55,7 @@ SAT_returnState gs_cmds_scheduler_service_app(csp_packet_t *gs_cmds) {
             printf("Unexpected error %d from f_stat()\r\n", (int)red_errno);
             ex2_log("Failed to read file stats from: '%s'\n", fileName1);
             red_close(fout);
-            return FAILURE;
+            return SATR_ERROR;
         }
         // get number of existing cmds
         uint32_t num_existing_cmds = scheduler_stat.st_size / sizeof(scheduled_commands_unix_t);
@@ -73,14 +69,14 @@ SAT_returnState gs_cmds_scheduler_service_app(csp_packet_t *gs_cmds) {
             printf("Unexpected error %d from red_read()\r\n", (int)red_errno);
             ex2_log("Failed to read file: '%s'\n", fileName1);
             red_close(fout);
-            return FAILURE;
+            return SATR_ERROR;
         }
         // combine new commands and old commands into a single struct for sorting
         memcpy(&updated_cmds,&sorted_cmds,sizeof(sorted_cmds));
         memcpy((updated_cmds+number_of_cmds),&existing_cmds,sizeof(existing_cmds));
-        sort_cmds(&updated_cmds, total_cmds);
+        sort_cmds(updated_cmds, total_cmds);
         // write new cmds to file
-        write_cmds_to_file(1, &updated_cmds, total_cmds, fileName1);
+        write_cmds_to_file(1, updated_cmds, total_cmds, fileName1);
         // close file
         red_close(fout);
         // set Abort delay flag to 1
@@ -107,7 +103,7 @@ SAT_returnState gs_cmds_scheduler_service_app(csp_packet_t *gs_cmds) {
  *      Parse and store groundstation commands from the buffer to the array @param cmds
  * @param cmd_buff
  *      pointer to the buffer that stores the groundstation commands
- * @return Scheduler_Result
+ * @return Result
  *      FAILURE or SUCCESS
  */
 int prv_set_gs_scheduler(char *cmd_buff, scheduled_commands_t *cmds) {
@@ -121,221 +117,237 @@ int prv_set_gs_scheduler(char *cmd_buff, scheduled_commands_t *cmds) {
     while (number_of_cmds < MAX_NUM_CMDS) {
         // A carraige followed by a space or nothing indicates there is no more commands
         // TODO: determine if this is the best way to detect the end of the gs cmd script
-        if ((cmd_buff[str_position_1] == EOL && cmd_buff[str_position_1 + 1] == space) || (cmd_buff[str_position_1] == EOL && cmd_buff[str_position_1 + 1] == "")) {
+        if ((cmd_buff[str_position_1] == '\n' && cmd_buff[str_position_1 + 1] == ' ') || (cmd_buff[str_position_1] == '\n' && cmd_buff[str_position_1 + 1] == '\0')) {
             break;
         }
         /*-----------------------Fetch time in seconds-----------------------*/
         //Count the number of digits
-        if (cmd_buff[str_position_1] != space) {
+        while (cmd_buff[str_position_1] != ' ') {
             str_position_1++;
         }
         str_position_2 = str_position_1;
         //Count the number of spaces following the digits
-        if (cmd_buff[str_position_2] == space) {
+        while (cmd_buff[str_position_2] == ' ') {
             str_position_2++;
         }
-        //Single digit
-        if (str_position_2 - str_position_1 == 1) {
-            if (cmd_buff[str_position_1 - 1] == asterisk) {
-                (cmds + number_of_cmds)->scheduled_time.Second = ASTERISK;
-            }
-            else {
-                (cmds + number_of_cmds)->scheduled_time.Second = atoi(cmd_buff[str_position_1 - 1]);
-            }
+        //Scan the value
+        if (cmd_buff[str_position_1 - 1] == '*') {
+            (cmds + number_of_cmds)->scheduled_time.Second = ASTERISK;
         }
-        //Multiple digits
-        if (str_position_2 - str_position_1 != 1) {
-            //Create a buffer to store characters before the space
-            char substring [str_position_2 - old_str_position];
-            //Initialize buffer
-            memset(substring, "", (str_position_2 - old_str_position));
-            memcpy(substring, cmd_buff[old_str_position], (str_position_2 - old_str_position));
-            //Convert string in the buffer into integer value
-            (cmds + number_of_cmds)->scheduled_time.Second = atoi(substring);
+        else {
+            int buf_scanf;
+            char *buf_string = &cmd_buff[old_str_position];
+            int f_scanf = sscanf(buf_string,"%d",&buf_scanf);
+            //int f_scanf = sscanf(&cmd_buff[str_position_1 - 1],"%d",(cmds + number_of_cmds)->scheduled_time.Second);
+            if (f_scanf != 1) {
+                ex2_log("Error: unable to scan time in seconds for command: %d\n", number_of_cmds+1);
+                return -1;
+            }
+            (cmds + number_of_cmds)->scheduled_time.Second = (uint8_t)buf_scanf;
         }
+        
         old_str_position = str_position_2;
         str_position_1 = str_position_2;
         str_position_1++;
 
         /*-----------------------Fetch time in minutes-----------------------*/
         //Count the number of digits
-        if (cmd_buff[str_position_1] != space) {
+        while (cmd_buff[str_position_1] != ' ') {
             str_position_1++;
         }
         str_position_2 = str_position_1;
         //Count the number of spaces following the digits
-        if (cmd_buff[str_position_2] == space) {
+        while (cmd_buff[str_position_2] == ' ') {
             str_position_2++;
         }
-        //Single digit value
-        if (str_position_2 - str_position_1 == 1) {
-            if (cmd_buff[str_position_1 - 1] == asterisk) {
-                (cmds + number_of_cmds)->scheduled_time.Minute = ASTERISK;
-            }
-            else {
-                (cmds + number_of_cmds)->scheduled_time.Minute = atoi(cmd_buff[str_position_1 - 1]);
-            }
+        //Scan the value
+        if (cmd_buff[str_position_1 - 1] == '*') {
+            (cmds + number_of_cmds)->scheduled_time.Minute = ASTERISK;
         }
-        //Multiple digits
-        if (str_position_2 - str_position_1 != 1) {
-            //Create a buffer to store characters before the space
-            char substring [str_position_2 - old_str_position];
-            //Initialize buffer
-            memset(substring, "", (str_position_2 - old_str_position));
-            memcpy(substring, cmd_buff[old_str_position], (str_position_2 - old_str_position));
-            //Convert string in the buffer into integer value
-            (cmds + number_of_cmds)->scheduled_time.Minute = atoi(substring);
+        else {
+            int buf_scanf;
+            char *buf_string = &cmd_buff[old_str_position];
+            int f_scanf = sscanf(buf_string,"%d",&buf_scanf);
+            if (f_scanf != 1) {
+                ex2_log("Error: unable to scan time in Minute for command: %d\n", number_of_cmds+1);
+                return -1;
+            }
+            (cmds + number_of_cmds)->scheduled_time.Minute = (uint8_t)buf_scanf;
         }
+
         old_str_position = str_position_2;
         str_position_1 = str_position_2;
         str_position_1++;
 
         /*-----------------------Fetch time in hour-----------------------*/
         //Count the number of digits
-        if (cmd_buff[str_position_1] != space) {
+        while (cmd_buff[str_position_1] != ' ') {
             str_position_1++;
         }
         str_position_2 = str_position_1;
         //Count the number of spaces following the digits
-        if (cmd_buff[str_position_2] == space) {
+        while (cmd_buff[str_position_2] == ' ') {
             str_position_2++;
         }
-        //Single digit value
-        if (str_position_2 - str_position_1 == 1) {
-            if (cmd_buff[str_position_1 - 1] == asterisk) {
-                (cmds + number_of_cmds)->scheduled_time.Minute = ASTERISK;
-            }
-            else {
-                (cmds + number_of_cmds)->scheduled_time.Minute = atoi(cmd_buff[str_position_1 - 1]);
-            }
+        //Scan the value
+        if (cmd_buff[str_position_1 - 1] == '*') {
+            (cmds + number_of_cmds)->scheduled_time.Hour = ASTERISK;
         }
-        //Multiple digits
-        if (str_position_2 - str_position_1 != 1) {
-            //Create a buffer to store characters before the space
-            char substring [str_position_2 - old_str_position];
-            //Initialize buffer
-            memset(substring, "", (str_position_2 - old_str_position));
-            memcpy(substring, cmd_buff[old_str_position], (str_position_2 - old_str_position));
-            //Convert string in the buffer into integer value
-            (cmds + number_of_cmds)->scheduled_time.Hour = atoi(substring);
+        else {
+            int buf_scanf;
+            char *buf_string = &cmd_buff[old_str_position];
+            int f_scanf = sscanf(buf_string,"%d",&buf_scanf);
+            if (f_scanf != 1) {
+                ex2_log("Error: unable to scan time in Hour for command: %d\n", number_of_cmds+1);
+                return -1;
+            }
+            (cmds + number_of_cmds)->scheduled_time.Hour = (uint8_t)buf_scanf;
         }
+
+        old_str_position = str_position_2;
+        str_position_1 = str_position_2;
+        str_position_1++;
+
+        /*-----------------------Fetch the Wday-----------------------*/
+        //Count the number of digits
+        while (cmd_buff[str_position_1] != ' ') {
+            str_position_1++;
+        }
+        str_position_2 = str_position_1;
+        //Count the number of spaces following the digits
+        while (cmd_buff[str_position_2] == ' ') {
+            str_position_2++;
+        }
+        //Scan the value
+        if (cmd_buff[str_position_1 - 1] == '*') {
+            (cmds + number_of_cmds)->scheduled_time.Wday = ASTERISK;
+        }
+        else {
+            int buf_scanf;
+            char *buf_string = &cmd_buff[old_str_position];
+            int f_scanf = sscanf(buf_string,"%d",&buf_scanf);
+            if (f_scanf != 1) {
+                ex2_log("Error: unable to scan time in Wday for command: %d\n", number_of_cmds+1);
+                return -1;
+            }
+            (cmds + number_of_cmds)->scheduled_time.Wday = (uint8_t)buf_scanf;
+        }
+
+        old_str_position = str_position_2;
+        str_position_1 = str_position_2;
+        str_position_1++;
+
+        /*-----------------------Fetch the Day-----------------------*/
+        //Count the number of digits
+        while (cmd_buff[str_position_1] != ' ') {
+            str_position_1++;
+        }
+        str_position_2 = str_position_1;
+        //Count the number of spaces following the digits
+        while (cmd_buff[str_position_2] == ' ') {
+            str_position_2++;
+        }
+        //Scan the value
+        if (cmd_buff[str_position_1 - 1] == '*') {
+            (cmds + number_of_cmds)->scheduled_time.Day = ASTERISK;
+        }
+        else {
+            int buf_scanf;
+            char *buf_string = &cmd_buff[old_str_position];
+            int f_scanf = sscanf(buf_string,"%d",&buf_scanf);
+            if (f_scanf != 1) {
+                ex2_log("Error: unable to scan time in Day for command: %d\n", number_of_cmds+1);
+                return -1;
+            }
+            (cmds + number_of_cmds)->scheduled_time.Day = (uint8_t)buf_scanf;
+        }
+
         old_str_position = str_position_2;
         str_position_1 = str_position_2;
         str_position_1++;
 
         /*-----------------------Fetch the month-----------------------*/
         //Count the number of digits
-        if (cmd_buff[str_position_1] != space) {
+        while (cmd_buff[str_position_1] != ' ') {
             str_position_1++;
         }
         str_position_2 = str_position_1;
         //Count the number of spaces following the digits
-        if (cmd_buff[str_position_2] == space) {
+        while (cmd_buff[str_position_2] == ' ') {
             str_position_2++;
         }
-        //Single digit value
-        if (str_position_2 - str_position_1 == 1) {
-            if (cmd_buff[str_position_1 - 1] == asterisk) {
-                (cmds + number_of_cmds)->scheduled_time.Month = ASTERISK;
-            }
-            else {
-                (cmds + number_of_cmds)->scheduled_time.Month = atoi(cmd_buff[str_position_1 - 1]);
-            }
+        //Scan the value
+        if (cmd_buff[str_position_1 - 1] == '*') {
+            (cmds + number_of_cmds)->scheduled_time.Month = ASTERISK;
         }
-        //Multiple digits
-        if (str_position_2 - str_position_1 != 1) {
-            //Create a buffer to store characters before the space
-            char substring [str_position_2 - old_str_position];
-            //Initialize buffer
-            memset(substring, "", (str_position_2 - old_str_position));
-            memcpy(substring, cmd_buff[old_str_position], (str_position_2 - old_str_position));
-            //Convert string in the buffer into integer value
-            (cmds + number_of_cmds)->scheduled_time.Month = atoi(substring);
+        else {
+            int buf_scanf;
+            char *buf_string = &cmd_buff[old_str_position];
+            int f_scanf = sscanf(buf_string,"%d",&buf_scanf);
+            if (f_scanf != 1) {
+                ex2_log("Error: unable to scan time in Month for command: %d\n", number_of_cmds+1);
+                return -1;
+            }
+            (cmds + number_of_cmds)->scheduled_time.Month = (uint8_t)buf_scanf;
         }
+
         old_str_position = str_position_2;
         str_position_1 = str_position_2;
         str_position_1++;
 
-        /*-----------------------Fetch the number of years since 1900-----------------------*/
+        /*-----------------------Fetch the number of years since 1970-----------------------*/
         //Count the number of digits
-        if (cmd_buff[str_position_1] != space) {
+        while (cmd_buff[str_position_1] != ' ') {
             str_position_1++;
         }
         str_position_2 = str_position_1;
         //Count the number of spaces following the digits
-        if (cmd_buff[str_position_2] == space) {
+        while (cmd_buff[str_position_2] == ' ') {
             str_position_2++;
         }
-        //Single digit value
-        if (str_position_2 - str_position_1 == 1) {
-            if (cmd_buff[str_position_1 - 1] == asterisk) {
-                (cmds + number_of_cmds)->scheduled_time.Year = ASTERISK;
-            }
-            else {
-                (cmds + number_of_cmds)->scheduled_time.Year = atoi(cmd_buff[str_position_1 - 1]);
-            }
+        //Scan the value
+        if (cmd_buff[str_position_1 - 1] == '*') {
+            (cmds + number_of_cmds)->scheduled_time.Year = ASTERISK;
         }
-        //Multiple digits
-        if (str_position_2 - str_position_1 != 1) {
-            //Create a buffer to store characters before the space
-            char substring [str_position_2 - old_str_position];
-            //Initialize buffer
-            memset(substring, "", (str_position_2 - old_str_position));
-            memcpy(substring, cmd_buff[old_str_position], (str_position_2 - old_str_position));
-            //Convert string in the buffer into integer value
-            (cmds + number_of_cmds)->scheduled_time.Year = atoi(substring);
+        else {
+            int buf_scanf;
+            char *buf_string = &cmd_buff[old_str_position];
+            int f_scanf = sscanf(buf_string,"%d",&buf_scanf);
+            if (f_scanf != 1) {
+                ex2_log("Error: unable to scan time in Year for command: %d\n", number_of_cmds+1);
+                return -1;
+            }
+            (cmds + number_of_cmds)->scheduled_time.Year = (uint8_t)buf_scanf;
         }
-        old_str_position = str_position_2;
-        str_position_1 = str_position_2;
-        str_position_1++;
 
-        /*-----------------------Fetch day of the week-----------------------*/
-        //Count the number of digits
-        if (cmd_buff[str_position_1] != space) {
-            str_position_1++;
-        }
-        str_position_2 = str_position_1;
-        //Count the number of spaces following the digits
-        if (cmd_buff[str_position_2] == space) {
-            str_position_2++;
-        }
-        //Single digit value
-        if (str_position_2 - str_position_1 == 1) {
-            if (cmd_buff[str_position_1 - 1] == asterisk) {
-                (cmds + number_of_cmds)->scheduled_time.Wday = ASTERISK;
-            }
-            else {
-                (cmds + number_of_cmds)->scheduled_time.Wday = atoi(cmd_buff[str_position_1 - 1]);
-            }
-        }
-        //Multiple digits
-        if (str_position_2 - str_position_1 != 1) {
-            //Create a buffer to store characters before the space
-            char substring [str_position_2 - old_str_position];
-            //Initialize buffer
-            memset(substring, "", (str_position_2 - old_str_position));
-            memcpy(substring, cmd_buff[old_str_position], (str_position_2 - old_str_position));
-            //Convert string in the buffer into integer value
-            (cmds + number_of_cmds)->scheduled_time.Wday = atoi(substring);
-        }
         old_str_position = str_position_2;
         str_position_1 = str_position_2;
 
         /*-----------------------Fetch gs command-----------------------*/
         //Count the number of characters in the command
-        if (cmd_buff[str_position_2] == EOL) {
+        if (cmd_buff[str_position_2] == '\n') {
             //TODO: discuss whether this is the best way to log error
-            ex2_log("command is empty");
+            ex2_log("command is empty for command: %d\n", number_of_cmds+1);
         }
-        if (cmd_buff[str_position_2] != EOL) {
+        while (cmd_buff[str_position_2] != '\n') {
             str_position_2++;
         }
+        if (str_position_2 != old_str_position) {
+            char *buf_scanf[MAX_CMD_LENGTH];
+            char *buf_string = &cmd_buff[old_str_position];
+            int f_scanf = sscanf(buf_string,"%s",buf_scanf);
+            if (f_scanf != 1) {
+                ex2_log("Error: unable to scan scheduled command for command: %d\n", number_of_cmds+1);
+                return -1;
+            }
+            memcpy((cmds + number_of_cmds)->gs_command, buf_scanf, sizeof(buf_scanf));
+        }
+        //(cmds + number_of_cmds)->gs_command = (char)buf_scanf;
         //Store command into structure
-        memcpy((cmds + number_of_cmds)->gs_command, cmd_buff[old_str_position], (str_position_2 - old_str_position));
 
         old_str_position = str_position_2;
         str_position_1 = str_position_2;
-        str_position_1++;
+        //str_position_1++;
 
         number_of_cmds++;
     }
@@ -400,7 +412,7 @@ SAT_returnState calc_cmd_frequency(scheduled_commands_t *cmds, int number_of_cmd
     num_of_cmds.rep_cmds = j_rep;
 
     /*--------------------------------calculate the frequency of repeated cmds--------------------------------*/
-    struct tmElements_t time_buff;
+    static tmElements_t time_buff;
     //TODO: check that all callocs have been freed
     scheduled_commands_unix_t *repeated_cmds_buff = (scheduled_commands_unix_t*)calloc(j_rep, sizeof(scheduled_commands_unix_t));
     // Obtain the soonest time that the command will be executed, and calculate the frequency it needs to be executed at
@@ -409,7 +421,7 @@ SAT_returnState calc_cmd_frequency(scheduled_commands_t *cmds, int number_of_cmd
         time_buff.Month = (reoccurring_cmds+j)->scheduled_time.Month;
         memcpy((reoccurring_cmds+j)->gs_command,(repeated_cmds_buff+j)->gs_command,sizeof((repeated_cmds_buff+j)->gs_command));
         // If command repeats every second
-        if ((reoccurring_cmds+j)->scheduled_time.Hour == asterisk && (reoccurring_cmds+j)->scheduled_time.Minute == asterisk && (reoccurring_cmds+j)->scheduled_time.Second == asterisk) {
+        if ((reoccurring_cmds+j)->scheduled_time.Hour == '*' && (reoccurring_cmds+j)->scheduled_time.Minute == '*' && (reoccurring_cmds+j)->scheduled_time.Second == '*') {
             //TODO: consider edge cases where the hour increases as soon as this function is executed - complete
             RTCMK_ReadHours(RTCMK_ADDR, &time_buff.Hour);
             RTCMK_ReadMinutes(RTCMK_ADDR, &time_buff.Minute);
@@ -420,7 +432,7 @@ SAT_returnState calc_cmd_frequency(scheduled_commands_t *cmds, int number_of_cmd
             continue;
         }
         // If command repeats every minute
-        if ((reoccurring_cmds+j)->scheduled_time.Hour == asterisk && (reoccurring_cmds+j)->scheduled_time.Minute == asterisk) {
+        if ((reoccurring_cmds+j)->scheduled_time.Hour == '*' && (reoccurring_cmds+j)->scheduled_time.Minute == '*') {
             //TODO: consider edge cases where the hour increases as soon as this function is executed - complete
             RTCMK_ReadHours(RTCMK_ADDR, &time_buff.Hour);
             RTCMK_ReadMinutes(RTCMK_ADDR, &time_buff.Minute);
@@ -431,7 +443,7 @@ SAT_returnState calc_cmd_frequency(scheduled_commands_t *cmds, int number_of_cmd
             continue;
         }
         // If command repeats every hour
-        if ((reoccurring_cmds+j)->scheduled_time.Hour == asterisk) {
+        if ((reoccurring_cmds+j)->scheduled_time.Hour == '*') {
             //TODO: consider edge cases where the hour increases as soon as this function is executed - complete
             RTCMK_ReadHours(RTCMK_ADDR, &time_buff.Hour);
             time_buff.Minute = (reoccurring_cmds+j)->scheduled_time.Minute;
@@ -451,7 +463,7 @@ SAT_returnState calc_cmd_frequency(scheduled_commands_t *cmds, int number_of_cmd
     }
 
     /*--------------------------------Combine non-repetitive and repetitive commands into a single struct--------------------------------*/
-    memcpy(sorted_cmds,repeated_cmds_buff,sizeof(repeated_cmds_buff);
+    memcpy(sorted_cmds,repeated_cmds_buff,sizeof(repeated_cmds_buff));
     memcpy((sorted_cmds+j_rep),non_reoccurring_cmds,sizeof(scheduled_commands_unix_t)*j_non_rep);
 
     // free calloc
@@ -460,7 +472,7 @@ SAT_returnState calc_cmd_frequency(scheduled_commands_t *cmds, int number_of_cmd
     free(repeated_cmds_buff);
     
     //prv_give_lock(cmds);
-    return &SATR_OK;
+    return SATR_OK;
 }
 
 /**
@@ -489,12 +501,12 @@ SAT_returnState sort_cmds(scheduled_commands_unix_t *sorted_cmds, int number_of_
         }
         //swap the minimum with the current
         if ((sorted_cmds+ptr1)->unix_time != (sorted_cmds+min_ptr)->unix_time) {
-            memcpy(sorting_buff, (sorted_cmds+ptr1), sizeof(scheduled_commands_unix_t));
+            memcpy(&sorting_buff, &sorted_cmds+ptr1, sizeof(scheduled_commands_unix_t));
             memcpy((sorted_cmds+ptr1), (sorted_cmds+min_ptr), sizeof(scheduled_commands_unix_t));
-            memcpy((sorted_cmds+min_ptr), sorting_buff, sizeof(scheduled_commands_unix_t));
+            memcpy(&sorted_cmds+min_ptr, &sorting_buff, sizeof(scheduled_commands_unix_t));
         }
     }
-    return &SATR_OK;
+    return SATR_OK;
 }
 
 
@@ -520,10 +532,10 @@ SAT_returnState sort_cmds(scheduled_commands_unix_t *sorted_cmds, int number_of_
  *     uint16_t number to seek to in file
  * @param scheduled_cmds
  *      Struct containing groundstation commands to be executed at a given time
- * @return Scheduler_Result
+ * @return Result
  *      FAILURE or SUCCESS
  */
-Scheduler_Result write_cmds_to_file(uint16_t filenumber, scheduled_commands_unix_t *scheduled_cmds, int number_of_cmds, char fileName) {
+Result write_cmds_to_file(int filenumber, scheduled_commands_unix_t *scheduled_cmds, int number_of_cmds, char* fileName) {
     int32_t fout = red_open(fileName, RED_O_CREAT | RED_O_RDWR); // open or create file to write binary
     if (fout == -1) {
         printf("Unexpected error %d from red_open()\r\n", (int)red_errno);
@@ -568,6 +580,20 @@ SAT_returnState start_gs_scheduler_service(void *param) {
     csp_bind(sock, TC_GS_SCHEDULER_SERVICE);
     csp_listen(sock, SERVICE_BACKLOG_LEN);   // TODO: SERVICE_BACKLOG_LEN constant TBD
     //svc_wdt_counter++;
+
+    /*The code below is for testing only, comment out from final code*/
+    char *test_cmd = "50 1 2 3 24 2 52       obc.time_management.get_time()\n ";
+    int test_scanf = 0;
+    char *test_string = &test_cmd[2];
+    int f_scanf = sscanf(test_string,"%d", &test_scanf);
+    // allocating buffer for MAX_NUM_CMDS numbers of incoming commands
+    scheduled_commands_t *cmds = (scheduled_commands_t*)calloc(MAX_NUM_CMDS, sizeof(scheduled_commands_t));
+    // parse the commands
+    int number_of_cmds = prv_set_gs_scheduler(test_cmd, cmds);
+    // calculate frequency of cmds. Non-repetitive commands have a frequency of 0
+    scheduled_commands_unix_t *sorted_cmds = (scheduled_commands_unix_t*)calloc(number_of_cmds, sizeof(scheduled_commands_unix_t));
+    calc_cmd_frequency(cmds, number_of_cmds, sorted_cmds);
+    /*TODO: delete code above after testing is complete*/
 
     for (;;) {
         csp_conn_t *conn;

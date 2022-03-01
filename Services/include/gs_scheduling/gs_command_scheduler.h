@@ -22,9 +22,9 @@
 #ifndef EX2_SYSTEM_INCLUDE_GS_COMMAND_SCHEDULER_H_
 #define EX2_SYSTEM_INCLUDE_GS_COMMAND_SCHEDULER_H_
 
-#include "os_task.h"
-#include "system.h"
 #include <FreeRTOS.h>
+#include "system.h"
+#include "os_task.h"
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -33,16 +33,17 @@
 #include "rtcmk.h"
 #include "csp_types.h"
 #include "ex2_time.h"
-
-char fileName1[] = "VOL0:/gs_cmds.TMP";
-char fileName2[] = "VOL0:/gs_cmds_rep.TMP";
-char EOL = '\n';
-char space = ' ';
-char asterisk = '*';
-int delay_aborted = 0;
+#include "semphr.h"
+#include "services.h"
+#include <string.h>
+#include <csp/csp.h>
+#include "housekeeping_service.h"
+#include "task_manager.h"
+#include <redposix.h> //include for file system
+#include "logger.h"
 
 #define MAX_NUM_CMDS 2
-#define MAX_CMD_LENGTH 50
+#define MAX_CMD_LENGTH 50 //TODO: review max cmd length required w mission design/ gs
 #define MAX_BUFFER_LENGTH 500
 #define ASTERISK                                                                                                  \
     255 //'*' is binary 42 in ASCII.
@@ -51,7 +52,8 @@ int delay_aborted = 0;
 
 static char cmd_buff[MAX_BUFFER_LENGTH];
 
-typedef enum { SUCCESS = 0, FAILURE = 1 } Scheduler_Result;
+extern char* fileName1;
+extern int delay_aborted;
 
 //struct tm {
 //   uint8_t tm_sec;         /* seconds, range 0 to 59, use * for repetition */
@@ -95,8 +97,10 @@ SAT_returnState start_gs_scheduler_service(void *param);
 SAT_returnState get_scheduled_gs_command();
 SAT_returnState calc_cmd_frequency(scheduled_commands_t* cmds, int number_of_cmds, scheduled_commands_unix_t *sorted_cmds);
 SAT_returnState sort_cmds(scheduled_commands_unix_t *sorted_cmds, int number_of_cmds);
-Scheduler_Result execute_non_rep_gs_cmds(void);
-Scheduler_Result execute_rep_gs_cmds(void);
+static Result write_cmds_to_file(int filenumber, scheduled_commands_unix_t *scheduled_cmds, int number_of_cmds, char *fileName);
+Result execute_non_rep_gs_cmds(void);
+Result execute_rep_gs_cmds(void);
 static scheduled_commands_t *prv_get_cmds_scheduler();
+SAT_returnState vSchedulerHandler (void *pvParameters);
 
 #endif /* EX2_SYSTEM_INCLUDE_GS_COMMAND_SCHEDULER_H_ */
