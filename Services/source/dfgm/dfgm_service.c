@@ -123,15 +123,13 @@ SAT_returnState dfgm_service_app(csp_packet_t *packet) {
     uint8_t ser_subtype = (uint8_t)packet->data[SUBSERVICE_BYTE];
     int8_t status; // Status of HAL functions success
     SAT_returnState return_state = SATR_OK; // OK until error encountered
-    uint16_t givenRuntime = 0;
+    int32_t givenRuntime = 0;
     int32_t maxRuntime = INT_MAX;
 
     switch (ser_subtype) {
     case DFGM_RUN: {
         // Get runtime from packet
-        uint16_t tempGivenRuntime;
-        cnv8_16(&packet->data[IN_DATA_BYTE], &tempGivenRuntime);
-        givenRuntime = (int32_t) tempGivenRuntime;
+        cnv8_32(&packet->data[IN_DATA_BYTE], &givenRuntime);
 
         // Tell DFGM Task to run for the exact amount of seconds specified by givenRuntime
         status = HAL_DFGM_run(givenRuntime);
