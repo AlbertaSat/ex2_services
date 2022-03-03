@@ -22,12 +22,14 @@ int delay_aborted = 0;
  * @return SAT_returnState
  *      SATR_OK or SATR_ERROR
  */
-SAT_returnState gs_cmds_scheduler_service_app(csp_packet_t *gs_cmds) {
+SAT_returnState gs_cmds_scheduler_service_app(char *gs_cmds) {
+//SAT_returnState gs_cmds_scheduler_service_app(csp_packet_t *gs_cmds) {
     TaskHandle_t SchedulerHandler;
     // allocating buffer for MAX_NUM_CMDS numbers of incoming commands
     scheduled_commands_t *cmds = (scheduled_commands_t*)calloc(MAX_NUM_CMDS, sizeof(scheduled_commands_t));
     // parse the commands
-    int number_of_cmds = prv_set_gs_scheduler(&gs_cmds, &cmds);
+    int number_of_cmds = prv_set_gs_scheduler(gs_cmds, cmds);
+    //int number_of_cmds = prv_set_gs_scheduler(gs_cmds->data, cmds);
     // calculate frequency of cmds. Non-repetitive commands have a frequency of 0
     scheduled_commands_unix_t *sorted_cmds = (scheduled_commands_unix_t*)calloc(number_of_cmds, sizeof(scheduled_commands_unix_t));
     calc_cmd_frequency(cmds, number_of_cmds, sorted_cmds);
@@ -37,9 +39,13 @@ SAT_returnState gs_cmds_scheduler_service_app(csp_packet_t *gs_cmds) {
     // if file does not exist, create a scheduler
     if (fout == -1) {
         // sort the commands
-        sort_cmds(&sorted_cmds, number_of_cmds);
+        sort_cmds(sorted_cmds, number_of_cmds);
         // write cmds to file
-        write_cmds_to_file(1, sorted_cmds, number_of_cmds, fileName1);
+        int f_write = write_cmds_to_file(1, sorted_cmds, number_of_cmds, fileName1);
+        if (f_write != 0) {
+            ex2_log("Failed to create file: '%s'\n", fileName1);
+            return SATR_ERROR;
+        }
         // create the scheduler
         //TODO: review stack size
         xTaskCreate(vSchedulerHandler, "scheduler", 1000, NULL, GS_SCHEDULER_TASK_PRIO, SchedulerHandler);
@@ -117,8 +123,16 @@ int prv_set_gs_scheduler(char *cmd_buff, scheduled_commands_t *cmds) {
     while (number_of_cmds < MAX_NUM_CMDS) {
         // A carraige followed by a space or nothing indicates there is no more commands
         // TODO: determine if this is the best way to detect the end of the gs cmd script
-        if ((cmd_buff[str_position_1] == '\n' && cmd_buff[str_position_1 + 1] == ' ') || (cmd_buff[str_position_1] == '\n' && cmd_buff[str_position_1 + 1] == '\0')) {
+        if (cmd_buff[old_str_position] == '\0') {
             break;
+        }
+        else {
+            int buf_scanf;
+            char *buf_string = &cmd_buff[old_str_position];
+            int f_scanf = sscanf(buf_string,"%d",&buf_scanf);
+            if (f_scanf != 1) {
+                break;
+            }
         }
         /*-----------------------Fetch time in seconds-----------------------*/
         //Count the number of digits
@@ -138,7 +152,6 @@ int prv_set_gs_scheduler(char *cmd_buff, scheduled_commands_t *cmds) {
             int buf_scanf;
             char *buf_string = &cmd_buff[old_str_position];
             int f_scanf = sscanf(buf_string,"%d",&buf_scanf);
-            //int f_scanf = sscanf(&cmd_buff[str_position_1 - 1],"%d",(cmds + number_of_cmds)->scheduled_time.Second);
             if (f_scanf != 1) {
                 ex2_log("Error: unable to scan time in seconds for command: %d\n", number_of_cmds+1);
                 return -1;
@@ -340,10 +353,13 @@ int prv_set_gs_scheduler(char *cmd_buff, scheduled_commands_t *cmds) {
                 ex2_log("Error: unable to scan scheduled command for command: %d\n", number_of_cmds+1);
                 return -1;
             }
-            memcpy((cmds + number_of_cmds)->gs_command, buf_scanf, sizeof(buf_scanf));
+            memcpy((cmds + number_of_cmds)->gs_command, buf_scanf, (str_position_2 - old_str_position));
         }
-        //(cmds + number_of_cmds)->gs_command = (char)buf_scanf;
-        //Store command into structure
+        //Count the number of spaces in the beginning of the new line
+        str_position_2++;
+        while (cmd_buff[str_position_2] == ' ') {
+            str_position_2++;
+        }
 
         old_str_position = str_position_2;
         str_position_1 = str_position_2;
@@ -398,12 +414,12 @@ SAT_returnState calc_cmd_frequency(scheduled_commands_t *cmds, int number_of_cmd
                 (non_reoccurring_cmds+j_non_rep)->frequency = 0; //set frequency to zero for non-repetitive cmds
                 j_non_rep++;
             }
+        }
         
-            else if (j_rep < number_of_cmds) {
-                // Store the repetitve commands into the new struct reoccurring_cmds
-                memcpy(reoccurring_cmds+j_rep, cmds+j, 10 + MAX_CMD_LENGTH);
-                j_rep++;
-            }
+        else if (j_rep < number_of_cmds) {
+            // Store the repetitve commands into the new struct reoccurring_cmds
+            memcpy(reoccurring_cmds+j_rep, cmds+j, sizeof(scheduled_commands_t));
+            j_rep++;
         }
     }
 
@@ -419,9 +435,9 @@ SAT_returnState calc_cmd_frequency(scheduled_commands_t *cmds, int number_of_cmd
     for (int j=0; j < j_rep; j++) {
         time_buff.Wday = (reoccurring_cmds+j)->scheduled_time.Wday;
         time_buff.Month = (reoccurring_cmds+j)->scheduled_time.Month;
-        memcpy((reoccurring_cmds+j)->gs_command,(repeated_cmds_buff+j)->gs_command,sizeof((repeated_cmds_buff+j)->gs_command));
+        memcpy((repeated_cmds_buff+j)->gs_command,(reoccurring_cmds+j)->gs_command,sizeof((repeated_cmds_buff+j)->gs_command));
         // If command repeats every second
-        if ((reoccurring_cmds+j)->scheduled_time.Hour == '*' && (reoccurring_cmds+j)->scheduled_time.Minute == '*' && (reoccurring_cmds+j)->scheduled_time.Second == '*') {
+        if ((reoccurring_cmds+j)->scheduled_time.Hour == ASTERISK && (reoccurring_cmds+j)->scheduled_time.Minute == ASTERISK && (reoccurring_cmds+j)->scheduled_time.Second == ASTERISK) {
             //TODO: consider edge cases where the hour increases as soon as this function is executed - complete
             RTCMK_ReadHours(RTCMK_ADDR, &time_buff.Hour);
             RTCMK_ReadMinutes(RTCMK_ADDR, &time_buff.Minute);
@@ -432,7 +448,7 @@ SAT_returnState calc_cmd_frequency(scheduled_commands_t *cmds, int number_of_cmd
             continue;
         }
         // If command repeats every minute
-        if ((reoccurring_cmds+j)->scheduled_time.Hour == '*' && (reoccurring_cmds+j)->scheduled_time.Minute == '*') {
+        if ((reoccurring_cmds+j)->scheduled_time.Hour == ASTERISK && (reoccurring_cmds+j)->scheduled_time.Minute == ASTERISK) {
             //TODO: consider edge cases where the hour increases as soon as this function is executed - complete
             RTCMK_ReadHours(RTCMK_ADDR, &time_buff.Hour);
             RTCMK_ReadMinutes(RTCMK_ADDR, &time_buff.Minute);
@@ -443,7 +459,7 @@ SAT_returnState calc_cmd_frequency(scheduled_commands_t *cmds, int number_of_cmd
             continue;
         }
         // If command repeats every hour
-        if ((reoccurring_cmds+j)->scheduled_time.Hour == '*') {
+        if ((reoccurring_cmds+j)->scheduled_time.Hour == ASTERISK) {
             //TODO: consider edge cases where the hour increases as soon as this function is executed - complete
             RTCMK_ReadHours(RTCMK_ADDR, &time_buff.Hour);
             time_buff.Minute = (reoccurring_cmds+j)->scheduled_time.Minute;
@@ -463,7 +479,7 @@ SAT_returnState calc_cmd_frequency(scheduled_commands_t *cmds, int number_of_cmd
     }
 
     /*--------------------------------Combine non-repetitive and repetitive commands into a single struct--------------------------------*/
-    memcpy(sorted_cmds,repeated_cmds_buff,sizeof(repeated_cmds_buff));
+    memcpy(sorted_cmds,repeated_cmds_buff,sizeof(scheduled_commands_unix_t)*j_rep);
     memcpy((sorted_cmds+j_rep),non_reoccurring_cmds,sizeof(scheduled_commands_unix_t)*j_non_rep);
 
     // free calloc
@@ -501,9 +517,9 @@ SAT_returnState sort_cmds(scheduled_commands_unix_t *sorted_cmds, int number_of_
         }
         //swap the minimum with the current
         if ((sorted_cmds+ptr1)->unix_time != (sorted_cmds+min_ptr)->unix_time) {
-            memcpy(&sorting_buff, &sorted_cmds+ptr1, sizeof(scheduled_commands_unix_t));
+            memcpy(&sorting_buff, sorted_cmds+ptr1, sizeof(scheduled_commands_unix_t));
             memcpy((sorted_cmds+ptr1), (sorted_cmds+min_ptr), sizeof(scheduled_commands_unix_t));
-            memcpy(&sorted_cmds+min_ptr, &sorting_buff, sizeof(scheduled_commands_unix_t));
+            memcpy(sorted_cmds+min_ptr, &sorting_buff, sizeof(scheduled_commands_unix_t));
         }
     }
     return SATR_OK;
@@ -582,7 +598,13 @@ SAT_returnState start_gs_scheduler_service(void *param) {
     //svc_wdt_counter++;
 
     /*The code below is for testing only, comment out from final code*/
-    char *test_cmd = "50 1 2 3 24 2 52       obc.time_management.get_time()\n ";
+    //=====================================================================
+    //char *test_cmd = "12 * * 14 2 2 52 obc.time_management.get_time()\n ";
+    char *test_cmd = "50 1 2 3 24 2 52   obc.time_management.get_time()\n 12 * * 14 2 2 52 obc.time_management.get_time()\n ";
+    int rtc_test = RTCMK_SetUnix(1646180780);
+    gs_cmds_scheduler_service_app(test_cmd);
+
+    //char *test_cmd = "50 1 2 3 24 2 52       obc.time_management.get_time()\n 12 * 13 14 2 2 52 obc.time_management.get_time()\n ";
     int test_scanf = 0;
     char *test_string = &test_cmd[2];
     int f_scanf = sscanf(test_string,"%d", &test_scanf);
@@ -593,6 +615,7 @@ SAT_returnState start_gs_scheduler_service(void *param) {
     // calculate frequency of cmds. Non-repetitive commands have a frequency of 0
     scheduled_commands_unix_t *sorted_cmds = (scheduled_commands_unix_t*)calloc(number_of_cmds, sizeof(scheduled_commands_unix_t));
     calc_cmd_frequency(cmds, number_of_cmds, sorted_cmds);
+    //=====================================================================
     /*TODO: delete code above after testing is complete*/
 
     for (;;) {
@@ -614,6 +637,8 @@ SAT_returnState start_gs_scheduler_service(void *param) {
         csp_close(conn); // frees buffers used
     }
 }
+
+//TODO: keep a log of past commands
 
 
 ///*------------------------------------------------------------------------------------------*/

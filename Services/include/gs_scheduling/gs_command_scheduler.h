@@ -92,7 +92,8 @@ static number_of_cmds_t num_of_cmds;
 
 //scheduled_commands_t scheduled_command[MAX_NUM_CMDS];
 
-SAT_returnState gs_cmds_scheduler_service_app(csp_packet_t *gs_cmds);
+//SAT_returnState gs_cmds_scheduler_service_app(csp_packet_t *gs_cmds);
+SAT_returnState gs_cmds_scheduler_service_app(char *gs_cmds);
 SAT_returnState start_gs_scheduler_service(void *param);
 SAT_returnState get_scheduled_gs_command();
 SAT_returnState calc_cmd_frequency(scheduled_commands_t* cmds, int number_of_cmds, scheduled_commands_unix_t *sorted_cmds);
