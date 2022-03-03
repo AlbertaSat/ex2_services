@@ -944,7 +944,7 @@ SAT_returnState start_housekeeping_service(void);
  */
 void housekeeping_service(void *param) {
     csp_socket_t *sock;
-    sock = csp_socket(CSP_SO_CRC32REQ);
+    sock = csp_socket(CSP_SO_RDPREQ);
     csp_bind(sock, TC_HOUSEKEEPING_SERVICE);
     csp_listen(sock, SERVICE_BACKLOG_LEN);
     svc_wdt_counter++;

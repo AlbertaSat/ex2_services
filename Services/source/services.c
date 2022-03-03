@@ -51,7 +51,7 @@ SAT_returnState start_service_server(void) {
     }
 
     if (start_communication_service() != SATR_OK ||
-        start_housekeeping_service() != SATR_OK || start_general_service() != SATR_OK ||
+        /**start_housekeeping_service() != SATR_OK ||**/ start_general_service() != SATR_OK ||
         start_updater_service() != SATR_OK || start_logger_service() != SATR_OK ||
         start_dfgm_service() != SATR_OK) {
         return SATR_ERROR;
