@@ -601,7 +601,12 @@ SAT_returnState start_gs_scheduler_service(void *param) {
     //=====================================================================
     //char *test_cmd = "12 * * 14 2 2 52 obc.time_management.get_time()\n ";
     char *test_cmd = "50 1 2 3 24 2 52   obc.time_management.get_time()\n 12 * * 14 2 2 52 obc.time_management.get_time()\n ";
-    int rtc_test = RTCMK_SetUnix(1646180780);
+    int rtc_test = RTCMK_SetUnix(1646289251); //march 02
+    time_t rtc_unix_1, rtc_unix_2;
+    int rtc_unix_test = RTCMK_GetUnix(&rtc_unix_1);
+    rtc_test = RTCMK_SetUnix(1646375651); //march 03
+    rtc_unix_test = RTCMK_GetUnix(&rtc_unix_2);
+    
     gs_cmds_scheduler_service_app(test_cmd);
 
     //char *test_cmd = "50 1 2 3 24 2 52       obc.time_management.get_time()\n 12 * 13 14 2 2 52 obc.time_management.get_time()\n ";
