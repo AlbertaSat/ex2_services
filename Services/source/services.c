@@ -49,6 +49,7 @@ SAT_returnState start_service_server(void) {
         pdPASS) {
         return SATR_ERROR;
     }
+    ex2_task_init_mutex();
     start_cli_service();
     if (//start_communication_service() != SATR_OK || start_time_management_service() != SATR_OK ||
         start_gs_scheduler_service() != SATR_OK ||
