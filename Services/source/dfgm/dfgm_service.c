@@ -162,7 +162,7 @@ SAT_returnState dfgm_service_app(csp_packet_t *packet) {
 
     case DFGM_GET_HK: {
         // Get DFGM HK data
-        DFGM_Housekeeping HK;
+        DFGM_Housekeeping HK = {0};
         status = HAL_DFGM_getHK(&HK); // Should check if HK is most recent
 
         // Convert floats from host byte order to server byte order
