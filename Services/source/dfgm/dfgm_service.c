@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015  University of Alberta
+ * Copyright (C) 2021  University of Alberta
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -12,9 +12,9 @@
  * GNU General Public License for more details.
  */
 /**
- * @file
- * @author
- * @date
+ * @file dfgm_service.c
+ * @author Daniel Sacro
+ * @date 2022-02-08
  */
 
 #include "dfgm/dfgm_service.h"
@@ -39,9 +39,9 @@ static uint32_t get_svc_wdt_counter() { return svc_wdt_counter; }
 
 /**
  * @brief
- *      FreeRTOS dfgm server task
+ *      FreeRTOS DFGM server task
  * @details
- *      Accepts incoming dfgm service packets and executes
+ *      Accepts incoming DFGM service packets and executes
  *      the application
  * @param void* param
  * @return None
@@ -49,9 +49,9 @@ static uint32_t get_svc_wdt_counter() { return svc_wdt_counter; }
 void dfgm_service(void *param) {
     // socket initialization
     csp_socket_t *sock;
-    sock = csp_socket(CSP_SO_RDPREQ); // creates socket
-    csp_bind(sock, TC_DFGM_SERVICE); // binds service to socket
-    csp_listen(sock, SERVICE_BACKLOG_LEN); // listens for packets
+    sock = csp_socket(CSP_SO_RDPREQ);
+    csp_bind(sock, TC_DFGM_SERVICE);
+    csp_listen(sock, SERVICE_BACKLOG_LEN);
 
     svc_wdt_counter++;
 
@@ -69,10 +69,10 @@ void dfgm_service(void *param) {
         // read and process packets
         while ((packet = csp_read(conn, 50)) != NULL) {
             if (dfgm_service_app(packet) != SATR_OK) {
-                // something went wrong in a subservice, ignore the packet
+                // something went wrong in the subservice
                 csp_buffer_free(packet);
             } else {
-                // subservice was somewhat successful, send packet back
+                // subservice was successful
                 if (!csp_send(conn, packet, 50)) {
                     csp_buffer_free(packet);
                 }
@@ -84,13 +84,13 @@ void dfgm_service(void *param) {
 
 /**
  * @brief
- *      Start the dfgm server task
+ *      Starts the DFGM server task
  * @details
  *      Starts the FreeRTOS task responsible for accepting incoming
- *      dfgm service requests
+ *      DFGM service requests
  * @param None
  * @return SAT_returnState
- *      success report
+ *      Success report
  */
 SAT_returnState start_dfgm_service(void) {
     TaskHandle_t svc_tsk;
@@ -111,9 +111,7 @@ SAT_returnState start_dfgm_service(void) {
  * @brief
  *      Takes a CSP packet and switches based on the subservice command
  * @details
- *      Reads/Writes data from DFGM EH using subservices
- * @attention
- *      Some subservices return the aggregation of error status of multiple HALs
+ *      Reads/Writes data from DFGM EHs using subservices
  * @param *packet
  *      The CSP packet
  * @return SAT_returnState
@@ -121,40 +119,40 @@ SAT_returnState start_dfgm_service(void) {
  */
 SAT_returnState dfgm_service_app(csp_packet_t *packet) {
     uint8_t ser_subtype = (uint8_t)packet->data[SUBSERVICE_BYTE];
-    int8_t status; // Status of HAL functions success
-    SAT_returnState return_state = SATR_OK; // OK until error encountered
+    int8_t status;
+    SAT_returnState return_state = SATR_OK; // OK until an error is encountered
     int32_t givenRuntime = 0;
-    int32_t maxRuntime = INT_MAX;
+    int32_t maxRuntime = INT_MAX; // INT_MAX = 2^31 - 1 seconds = ~68.05 yrs
 
     switch (ser_subtype) {
     case DFGM_RUN: {
-        // Get runtime from packet
+        // Get runtime
         cnv8_32(&packet->data[IN_DATA_BYTE], &givenRuntime);
 
-        // Tell DFGM Task to run for the exact amount of seconds specified by givenRuntime
+        // Give runtime (in seconds) to the DFGM Rx Task
         status = HAL_DFGM_run(givenRuntime);
 
-        // Return success status of subservice
+        // Return success report
         memcpy(&packet->data[STATUS_BYTE], &status, sizeof(int8_t));
         set_packet_length(packet, sizeof(int8_t) + 1);
         break;
     }
 
     case DFGM_START: {
-        // Tell DFGM Task to run indefinitely. INT_MAX is big enough to be considered an indefinite runtime (~68.05 yrs)
+        // Give the max runtime (in seconds) to the DFGM Rx Task
         status = HAL_DFGM_run(maxRuntime);
 
-        // Return success status of subservice
+        // Return success report
         memcpy(&packet->data[STATUS_BYTE], &status, sizeof(int8_t));
         set_packet_length(packet, sizeof(int8_t) + 1);
         break;
     }
 
     case DFGM_STOP: {
-        // Tell DFGM Task to stop running. No effect/consequences if the Task isn't running.
+        // Tell the DFGM Rx Task to stop running
         status = HAL_DFGM_stop();
 
-        // Return success status of subservice
+        // Return success report
         memcpy(&packet->data[STATUS_BYTE], &status, sizeof(int8_t));
         set_packet_length(packet, sizeof(int8_t) + 1);
         break;
@@ -163,7 +161,7 @@ SAT_returnState dfgm_service_app(csp_packet_t *packet) {
     case DFGM_GET_HK: {
         // Get DFGM HK data
         DFGM_Housekeeping HK = {0};
-        status = HAL_DFGM_get_HK(&HK); // Should check if HK is most recent
+        status = HAL_DFGM_get_HK(&HK);
 
         // Convert floats from host byte order to server byte order
         HK.coreVoltage = csp_htonflt(HK.coreVoltage);
@@ -179,7 +177,7 @@ SAT_returnState dfgm_service_app(csp_packet_t *packet) {
         HK.reserved3 = csp_htonflt(HK.reserved3);
         HK.reserved4 = csp_htonflt(HK.reserved4);
 
-        // Return success status of subservice + HK data
+        // Return success report and DFGM HK data
         memcpy(&packet->data[STATUS_BYTE], &status, sizeof(int8_t));
         memcpy(&packet->data[OUT_DATA_BYTE], &HK, sizeof(HK));
         set_packet_length(packet, sizeof(int8_t) + sizeof(HK) + 1);
