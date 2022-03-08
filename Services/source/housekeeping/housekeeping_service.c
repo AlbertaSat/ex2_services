@@ -19,27 +19,13 @@
 #include "housekeeping/housekeeping_service.h"
 
 #include <FreeRTOS.h>
-#include <csp/csp.h>
-#include <csp/csp_endian.h>
-#include <os_portmacro.h>
-#include <os_projdefs.h>
 #include <os_semphr.h>
-#include <os_task.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
-#include "i2c.h"
-
-#include <semphr.h> //for semaphore lock
-
 #include <redposix.h> //include for file system
-
-#include "rtcmk.h" //to get time from RTC
-
+#include "rtcmk.h"    //to get time from RTC
 #include "services.h"
 #include "task_manager/task_manager.h"
 #include "util/service_utilities.h"
+#include "csp/csp_endian.h"
 
 uint16_t MAX_FILES = 20160; // value is 20160 (7 days) based on 30 second period
 char fileName[] = "VOL0:/tempHKdata.TMP";
@@ -168,203 +154,202 @@ Result dynamic_timestamp_array_handler(uint16_t num_items) {
 int32_t temp = 0;
 uint32_t tempTime = 1000;
 
-Result mock_everyone(All_systems_housekeeping* all_hk_data) {
-  //universal temps
-  long tempLong = (long)temp;
-  uint8_t tempu8 = (uint8_t)temp;
-  int8_t temp8 = (int8_t)temp;
-  double tempDouble = (temp * 1.0);
-  uint16_t tempu16 = (uint16_t)temp;
-  uint32_t tempu32 = (uint32_t)temp; 
-  float tempFloat = (temp * 1.0);
+Result mock_everyone(All_systems_housekeeping *all_hk_data) {
+    // universal temps
+    long tempLong = (long)temp;
+    uint8_t tempu8 = (uint8_t)temp;
+    int8_t temp8 = (int8_t)temp;
+    double tempDouble = (temp * 1.0);
+    uint16_t tempu16 = (uint16_t)temp;
+    uint32_t tempu32 = (uint32_t)temp;
+    float tempFloat = (temp * 1.0);
 
-  //Packet meta
-  all_hk_data->hk_timeorder.UNIXtimestamp = tempTime;
+    // Packet meta
+    all_hk_data->hk_timeorder.UNIXtimestamp = tempTime;
 
+    // ADCS
+    all_hk_data->adcs_hk.Estimated_Angular_Rate_X = tempFloat;
+    all_hk_data->adcs_hk.Estimated_Angular_Rate_Y = tempFloat;
+    all_hk_data->adcs_hk.Estimated_Angular_Rate_Z = tempFloat;
+    all_hk_data->adcs_hk.Estimated_Angular_Angle_X = tempFloat;
+    all_hk_data->adcs_hk.Estimated_Angular_Angle_Y = tempFloat;
+    all_hk_data->adcs_hk.Estimated_Angular_Angle_Z = tempFloat;
+    all_hk_data->adcs_hk.Sat_Position_ECI_X = tempFloat;
+    all_hk_data->adcs_hk.Sat_Position_ECI_Y = tempFloat;
+    all_hk_data->adcs_hk.Sat_Position_ECI_Z = tempFloat;
+    all_hk_data->adcs_hk.Sat_Velocity_ECI_X = tempFloat;
+    all_hk_data->adcs_hk.Sat_Velocity_ECI_Y = tempFloat;
+    all_hk_data->adcs_hk.Sat_Velocity_ECI_Z = tempFloat;
+    all_hk_data->adcs_hk.Sat_Position_LLH_X = tempFloat;
+    all_hk_data->adcs_hk.Sat_Position_LLH_Y = tempFloat;
+    all_hk_data->adcs_hk.Sat_Position_LLH_Z = tempFloat;
+    all_hk_data->adcs_hk.ECEF_Position_X = tempFloat;
+    all_hk_data->adcs_hk.ECEF_Position_Y = tempFloat;
+    all_hk_data->adcs_hk.ECEF_Position_Z = tempFloat;
+    all_hk_data->adcs_hk.Coarse_Sun_Vector_X = tempFloat;
+    all_hk_data->adcs_hk.Coarse_Sun_Vector_Y = tempFloat;
+    all_hk_data->adcs_hk.Coarse_Sun_Vector_Z = tempFloat;
+    all_hk_data->adcs_hk.Fine_Sun_Vector_X = tempFloat;
+    all_hk_data->adcs_hk.Fine_Sun_Vector_Y = tempFloat;
+    all_hk_data->adcs_hk.Fine_Sun_Vector_Z = tempFloat;
+    all_hk_data->adcs_hk.Nadir_Vector_X = tempFloat;
+    all_hk_data->adcs_hk.Nadir_Vector_Y = tempFloat;
+    all_hk_data->adcs_hk.Nadir_Vector_Z = tempFloat;
+    all_hk_data->adcs_hk.Wheel_Speed_X = tempFloat;
+    all_hk_data->adcs_hk.Wheel_Speed_Y = tempFloat;
+    all_hk_data->adcs_hk.Wheel_Speed_Z = tempFloat;
+    all_hk_data->adcs_hk.Mag_Field_Vector_X = tempFloat;
+    all_hk_data->adcs_hk.Mag_Field_Vector_Y = tempFloat;
+    all_hk_data->adcs_hk.Mag_Field_Vector_Z = tempFloat;
+    all_hk_data->adcs_hk.Comm_Status = tempFloat;
+    all_hk_data->adcs_hk.Wheel1_Current = tempFloat;
+    all_hk_data->adcs_hk.Wheel2_Current = tempFloat;
+    all_hk_data->adcs_hk.Wheel3_Current = tempFloat;
+    all_hk_data->adcs_hk.CubeSense1_Current = tempFloat;
+    all_hk_data->adcs_hk.CubeSense2_Current = tempFloat;
+    all_hk_data->adcs_hk.CubeControl_Current3v3 = tempFloat;
+    all_hk_data->adcs_hk.CubeControl_Current5v0 = tempFloat;
+    all_hk_data->adcs_hk.CubeStar_Current = tempFloat;
+    all_hk_data->adcs_hk.CubeStar_Temp = tempFloat;
+    all_hk_data->adcs_hk.Magnetorquer_Current = tempFloat;
+    all_hk_data->adcs_hk.MCU_Temp = tempFloat;
+    all_hk_data->adcs_hk.Rate_Sensor_Temp_X = tempFloat;
+    all_hk_data->adcs_hk.Rate_Sensor_Temp_Y = tempFloat;
+    all_hk_data->adcs_hk.Rate_Sensor_Temp_Z = tempFloat;
 
-  //ADCS
-  all_hk_data->adcs_hk.Estimated_Angular_Rate_X = tempFloat;
-  all_hk_data->adcs_hk.Estimated_Angular_Rate_Y = tempFloat;
-  all_hk_data->adcs_hk.Estimated_Angular_Rate_Z = tempFloat;
-  all_hk_data->adcs_hk.Estimated_Angular_Angle_X = tempFloat;
-  all_hk_data->adcs_hk.Estimated_Angular_Angle_Y = tempFloat;
-  all_hk_data->adcs_hk.Estimated_Angular_Angle_Z = tempFloat;
-  all_hk_data->adcs_hk.Sat_Position_ECI_X = tempFloat;
-  all_hk_data->adcs_hk.Sat_Position_ECI_Y = tempFloat;
-  all_hk_data->adcs_hk.Sat_Position_ECI_Z = tempFloat;
-  all_hk_data->adcs_hk.Sat_Velocity_ECI_X = tempFloat;
-  all_hk_data->adcs_hk.Sat_Velocity_ECI_Y = tempFloat;
-  all_hk_data->adcs_hk.Sat_Velocity_ECI_Z = tempFloat;
-  all_hk_data->adcs_hk.Sat_Position_LLH_X = tempFloat;
-  all_hk_data->adcs_hk.Sat_Position_LLH_Y = tempFloat;
-  all_hk_data->adcs_hk.Sat_Position_LLH_Z = tempFloat;
-  all_hk_data->adcs_hk.ECEF_Position_X = tempFloat;
-  all_hk_data->adcs_hk.ECEF_Position_Y = tempFloat;
-  all_hk_data->adcs_hk.ECEF_Position_Z = tempFloat;
-  all_hk_data->adcs_hk.Coarse_Sun_Vector_X = tempFloat;
-  all_hk_data->adcs_hk.Coarse_Sun_Vector_Y = tempFloat;
-  all_hk_data->adcs_hk.Coarse_Sun_Vector_Z = tempFloat;
-  all_hk_data->adcs_hk.Fine_Sun_Vector_X = tempFloat;
-  all_hk_data->adcs_hk.Fine_Sun_Vector_Y = tempFloat;
-  all_hk_data->adcs_hk.Fine_Sun_Vector_Z = tempFloat;
-  all_hk_data->adcs_hk.Nadir_Vector_X = tempFloat;
-  all_hk_data->adcs_hk.Nadir_Vector_Y = tempFloat;
-  all_hk_data->adcs_hk.Nadir_Vector_Z = tempFloat;
-  all_hk_data->adcs_hk.Wheel_Speed_X = tempFloat;
-  all_hk_data->adcs_hk.Wheel_Speed_Y = tempFloat;
-  all_hk_data->adcs_hk.Wheel_Speed_Z = tempFloat;
-  all_hk_data->adcs_hk.Mag_Field_Vector_X = tempFloat;
-  all_hk_data->adcs_hk.Mag_Field_Vector_Y = tempFloat;
-  all_hk_data->adcs_hk.Mag_Field_Vector_Z = tempFloat;
-  all_hk_data->adcs_hk.Comm_Status = tempFloat;
-  all_hk_data->adcs_hk.Wheel1_Current = tempFloat;
-  all_hk_data->adcs_hk.Wheel2_Current = tempFloat;
-  all_hk_data->adcs_hk.Wheel3_Current = tempFloat;
-  all_hk_data->adcs_hk.CubeSense1_Current = tempFloat;
-  all_hk_data->adcs_hk.CubeSense2_Current = tempFloat;
-  all_hk_data->adcs_hk.CubeControl_Current3v3 = tempFloat;
-  all_hk_data->adcs_hk.CubeControl_Current5v0 = tempFloat;
-  all_hk_data->adcs_hk.CubeStar_Current = tempFloat;
-  all_hk_data->adcs_hk.CubeStar_Temp = tempFloat;
-  all_hk_data->adcs_hk.Magnetorquer_Current = tempFloat;
-  all_hk_data->adcs_hk.MCU_Temp = tempFloat;
-  all_hk_data->adcs_hk.Rate_Sensor_Temp_X = tempFloat;
-  all_hk_data->adcs_hk.Rate_Sensor_Temp_Y = tempFloat;
-  all_hk_data->adcs_hk.Rate_Sensor_Temp_Z = tempFloat;
+    // Athena
+    uint8_t i;
+    for (i = 0; i < ATHENA_TEMP_ARRAY_SIZE; i++) {
+        all_hk_data->Athena_hk.temparray[i] = tempLong;
+    }
+    all_hk_data->Athena_hk.boot_cnt = tempu16;
+    all_hk_data->Athena_hk.OBC_mode = tempu8;
+    all_hk_data->Athena_hk.OBC_uptime = tempu16;
+    all_hk_data->Athena_hk.solar_panel_supply_curr = tempu8;
+    all_hk_data->Athena_hk.OBC_software_ver = tempu8;
+    all_hk_data->Athena_hk.cmds_received = tempu16;
+    all_hk_data->Athena_hk.pckts_uncovered_by_FEC = tempu16;
 
-  //Athena
-  uint8_t i;
-  for (i = 0; i < ATHENA_TEMP_ARRAY_SIZE; i++) {
-    all_hk_data->Athena_hk.temparray[i] = tempLong;
-  }
-  all_hk_data->Athena_hk.boot_cnt = tempu16;
-  all_hk_data->Athena_hk.OBC_mode = tempu8;
-  all_hk_data->Athena_hk.OBC_uptime = tempu16;
-  all_hk_data->Athena_hk.solar_panel_supply_curr = tempu8;
-  all_hk_data->Athena_hk.OBC_software_ver = tempu8;
-  all_hk_data->Athena_hk.cmds_received = tempu16;
-  all_hk_data->Athena_hk.pckts_uncovered_by_FEC = tempu16;
+    // EPS
+    all_hk_data->EPS_hk.cmd = tempu8;
+    all_hk_data->EPS_hk.status = temp8;
+    all_hk_data->EPS_hk.timestampInS = tempDouble;
+    all_hk_data->EPS_hk.uptimeInS = tempu32;
+    all_hk_data->EPS_hk.bootCnt = tempu32;
+    all_hk_data->EPS_hk.wdt_gs_time_left = tempu32;
+    all_hk_data->EPS_hk.wdt_gs_counter = tempu32;
+    all_hk_data->EPS_hk.vBatt = tempu16;
+    all_hk_data->EPS_hk.curSolar = tempu16;
+    all_hk_data->EPS_hk.curBattIn = tempu16;
+    all_hk_data->EPS_hk.curBattOut = tempu16;
+    all_hk_data->EPS_hk.outputConverterState = tempu8;
+    all_hk_data->EPS_hk.outputStatus = tempu32;
+    all_hk_data->EPS_hk.outputFaultStatus = tempu32;
+    all_hk_data->EPS_hk.protectedOutputAccessCnt = tempu16;
+    all_hk_data->EPS_hk.battMode = tempu8;
+    all_hk_data->EPS_hk.mpptMode = tempu8;
+    all_hk_data->EPS_hk.batHeaterMode = tempu8;
+    all_hk_data->EPS_hk.batHeaterState = tempu8;
+    all_hk_data->EPS_hk.PingWdt_toggles = tempu16;
+    all_hk_data->EPS_hk.PingWdt_turnOffs = tempu8;
 
-  //EPS
-  all_hk_data->EPS_hk.cmd = tempu8;
-  all_hk_data->EPS_hk.status = temp8;
-  all_hk_data->EPS_hk.timestampInS = tempDouble;
-  all_hk_data->EPS_hk.uptimeInS = tempu32;
-  all_hk_data->EPS_hk.bootCnt = tempu32;
-  all_hk_data->EPS_hk.wdt_gs_time_left = tempu32;
-  all_hk_data->EPS_hk.wdt_gs_counter = tempu32;
-  all_hk_data->EPS_hk.vBatt = tempu16;
-  all_hk_data->EPS_hk.curSolar = tempu16;
-  all_hk_data->EPS_hk.curBattIn = tempu16;
-  all_hk_data->EPS_hk.curBattOut = tempu16;
-  all_hk_data->EPS_hk.outputConverterState = tempu8;
-  all_hk_data->EPS_hk.outputStatus = tempu32;
-  all_hk_data->EPS_hk.outputFaultStatus = tempu32;
-  all_hk_data->EPS_hk.protectedOutputAccessCnt = tempu16;
-  all_hk_data->EPS_hk.battMode = tempu8;
-  all_hk_data->EPS_hk.mpptMode = tempu8;
-  all_hk_data->EPS_hk.batHeaterMode = tempu8;
-  all_hk_data->EPS_hk.batHeaterState = tempu8;
-  all_hk_data->EPS_hk.PingWdt_toggles = tempu16;
-  all_hk_data->EPS_hk.PingWdt_turnOffs = tempu8;
+    for (i = 0; i < 2; i++) {
+        all_hk_data->EPS_hk.AOcurOutput[i] = tempu16;
+    }
+    for (i = 0; i < 4; i++) {
+        all_hk_data->EPS_hk.mpptConverterVoltage[i] = tempu16;
+    }
+    for (i = 0; i < 8; i++) {
+        all_hk_data->EPS_hk.curSolarPanels[i] = tempu16;
+        all_hk_data->EPS_hk.OutputConverterVoltage[i] = tempu16;
+    }
+    for (i = 0; i < 18; i++) {
+        all_hk_data->EPS_hk.curOutput[i] = tempu16;
+        all_hk_data->EPS_hk.outputOnDelta[i] = tempu16;
+        all_hk_data->EPS_hk.outputOffDelta[i] = tempu16;
+        all_hk_data->EPS_hk.outputFaultCnt[i] = tempu8;
+    }
+    for (i = 0; i < 14; i++) {
+        all_hk_data->EPS_hk.temp[i] = temp8;
+    }
 
-  for (i = 0; i < 2;  i++) {
-      all_hk_data->EPS_hk.AOcurOutput[i] = tempu16;
-  }
-  for (i = 0; i < 4;  i++) {
-      all_hk_data->EPS_hk.mpptConverterVoltage[i] = tempu16;
-  }
-  for (i = 0; i < 8;  i++) {
-      all_hk_data->EPS_hk.curSolarPanels[i] = tempu16;
-      all_hk_data->EPS_hk.OutputConverterVoltage[i] = tempu16;
-  }
-  for (i = 0; i < 18; i++) {
-      all_hk_data->EPS_hk.curOutput[i] = tempu16;
-      all_hk_data->EPS_hk.outputOnDelta[i] = tempu16;
-      all_hk_data->EPS_hk.outputOffDelta[i] = tempu16;
-      all_hk_data->EPS_hk.outputFaultCnt[i] = tempu8;
-  }
-  for (i = 0; i < 14; i++) {
-      all_hk_data->EPS_hk.temp[i] = temp8;
-  }
+    // UHF
+    all_hk_data->UHF_hk.freq = tempu32;
+    all_hk_data->UHF_hk.pipe_t = tempu32;
+    all_hk_data->UHF_hk.beacon_t = tempu32;
+    all_hk_data->UHF_hk.audio_t = tempu32;
+    all_hk_data->UHF_hk.uptime = tempu32;
+    all_hk_data->UHF_hk.pckts_out = tempu32;
+    all_hk_data->UHF_hk.pckts_in = tempu32;
+    all_hk_data->UHF_hk.pckts_in_crc16 = tempu32;
+    all_hk_data->UHF_hk.temperature = tempFloat;
 
-  //UHF
-  all_hk_data->UHF_hk.freq = tempu32;
-  all_hk_data->UHF_hk.pipe_t = tempu32;
-  all_hk_data->UHF_hk.beacon_t = tempu32;
-  all_hk_data->UHF_hk.audio_t = tempu32;
-  all_hk_data->UHF_hk.uptime = tempu32;
-  all_hk_data->UHF_hk.pckts_out = tempu32;
-  all_hk_data->UHF_hk.pckts_in = tempu32;
-  all_hk_data->UHF_hk.pckts_in_crc16 = tempu32;
-  all_hk_data->UHF_hk.temperature = tempFloat;
+    for (i = 0; i < SCW_LEN; i++) {
+        all_hk_data->UHF_hk.scw[i] = tempu8;
+    }
 
-  for (i = 0; i < SCW_LEN;  i++) {
-    all_hk_data->UHF_hk.scw[i] = tempu8;
-  }
+    // Sband
+    all_hk_data->S_band_hk.Output_Power = tempFloat;
+    all_hk_data->S_band_hk.PA_Temp = tempFloat;
+    all_hk_data->S_band_hk.Top_Temp = tempFloat;
+    all_hk_data->S_band_hk.Bottom_Temp = tempFloat;
+    all_hk_data->S_band_hk.Bat_Current = tempFloat;
+    all_hk_data->S_band_hk.Bat_Voltage = tempFloat;
+    all_hk_data->S_band_hk.PA_Current = tempFloat;
+    all_hk_data->S_band_hk.PA_Voltage = tempFloat;
 
-  //Sband
-  all_hk_data->S_band_hk.Output_Power = tempFloat;
-  all_hk_data->S_band_hk.PA_Temp = tempFloat;
-  all_hk_data->S_band_hk.Top_Temp = tempFloat;
-  all_hk_data->S_band_hk.Bottom_Temp = tempFloat;
-  all_hk_data->S_band_hk.Bat_Current = tempFloat;
-  all_hk_data->S_band_hk.Bat_Voltage = tempFloat;
-  all_hk_data->S_band_hk.PA_Current = tempFloat;
-  all_hk_data->S_band_hk.PA_Voltage = tempFloat;
+    // Hyperion
+    all_hk_data->hyperion_hk.Nadir_Temp1 = tempFloat;
+    all_hk_data->hyperion_hk.Port_Temp1 = tempFloat;
+    all_hk_data->hyperion_hk.Port_Temp2 = tempFloat;
+    all_hk_data->hyperion_hk.Port_Temp3 = tempFloat;
+    all_hk_data->hyperion_hk.Port_Temp_Adc = tempFloat;
+    all_hk_data->hyperion_hk.Port_Dep_Temp1 = tempFloat;
+    all_hk_data->hyperion_hk.Port_Dep_Temp2 = tempFloat;
+    all_hk_data->hyperion_hk.Port_Dep_Temp3 = tempFloat;
+    all_hk_data->hyperion_hk.Port_Dep_Temp_Adc = tempFloat;
+    all_hk_data->hyperion_hk.Star_Temp1 = tempFloat;
+    all_hk_data->hyperion_hk.Star_Temp2 = tempFloat;
+    all_hk_data->hyperion_hk.Star_Temp3 = tempFloat;
+    all_hk_data->hyperion_hk.Star_Temp_Adc = tempFloat;
+    all_hk_data->hyperion_hk.Star_Dep_Temp1 = tempFloat;
+    all_hk_data->hyperion_hk.Star_Dep_Temp2 = tempFloat;
+    all_hk_data->hyperion_hk.Star_Dep_Temp3 = tempFloat;
+    all_hk_data->hyperion_hk.Star_Dep_Temp_Adc = tempFloat;
+    all_hk_data->hyperion_hk.Zenith_Temp1 = tempFloat;
+    all_hk_data->hyperion_hk.Zenith_Temp2 = tempFloat;
+    all_hk_data->hyperion_hk.Zenith_Temp3 = tempFloat;
+    all_hk_data->hyperion_hk.Zenith_Temp_Adc = tempFloat;
+    all_hk_data->hyperion_hk.Nadir_Pd1 = tempFloat;
+    all_hk_data->hyperion_hk.Port_Pd1 = tempFloat;
+    all_hk_data->hyperion_hk.Port_Pd2 = tempFloat;
+    all_hk_data->hyperion_hk.Port_Pd3 = tempFloat;
+    all_hk_data->hyperion_hk.Port_Dep_Pd1 = tempFloat;
+    all_hk_data->hyperion_hk.Port_Dep_Pd2 = tempFloat;
+    all_hk_data->hyperion_hk.Port_Dep_Pd3 = tempFloat;
+    all_hk_data->hyperion_hk.Star_Pd1 = tempFloat;
+    all_hk_data->hyperion_hk.Star_Pd2 = tempFloat;
+    all_hk_data->hyperion_hk.Star_Pd3 = tempFloat;
+    all_hk_data->hyperion_hk.Star_Dep_Pd1 = tempFloat;
+    all_hk_data->hyperion_hk.Star_Dep_Pd2 = tempFloat;
+    all_hk_data->hyperion_hk.Star_Dep_Pd3 = tempFloat;
+    all_hk_data->hyperion_hk.Zenith_Pd1 = tempFloat;
+    all_hk_data->hyperion_hk.Zenith_Pd2 = tempFloat;
+    all_hk_data->hyperion_hk.Zenith_Pd3 = tempFloat;
+    all_hk_data->hyperion_hk.Port_Voltage = tempFloat;
+    all_hk_data->hyperion_hk.Port_Dep_Voltage = tempFloat;
+    all_hk_data->hyperion_hk.Star_Voltage = tempFloat;
+    all_hk_data->hyperion_hk.Star_Dep_Voltage = tempFloat;
+    all_hk_data->hyperion_hk.Zenith_Voltage = tempFloat;
+    all_hk_data->hyperion_hk.Port_Current = tempFloat;
+    all_hk_data->hyperion_hk.Port_Dep_Current = tempFloat;
+    all_hk_data->hyperion_hk.Star_Current = tempFloat;
+    all_hk_data->hyperion_hk.Star_Dep_Current = tempFloat;
+    all_hk_data->hyperion_hk.Zenith_Current = tempFloat;
 
-  //Hyperion
-  all_hk_data->hyperion_hk.Nadir_Temp1 = tempFloat;
-  all_hk_data->hyperion_hk.Port_Temp1 = tempFloat;
-  all_hk_data->hyperion_hk.Port_Temp2 = tempFloat;
-  all_hk_data->hyperion_hk.Port_Temp3 = tempFloat;
-  all_hk_data->hyperion_hk.Port_Temp_Adc = tempFloat;
-  all_hk_data->hyperion_hk.Port_Dep_Temp1 = tempFloat;
-  all_hk_data->hyperion_hk.Port_Dep_Temp2 = tempFloat;
-  all_hk_data->hyperion_hk.Port_Dep_Temp3 = tempFloat;
-  all_hk_data->hyperion_hk.Port_Dep_Temp_Adc = tempFloat;
-  all_hk_data->hyperion_hk.Star_Temp1 = tempFloat;
-  all_hk_data->hyperion_hk.Star_Temp2 = tempFloat;
-  all_hk_data->hyperion_hk.Star_Temp3 = tempFloat;
-  all_hk_data->hyperion_hk.Star_Temp_Adc = tempFloat;
-  all_hk_data->hyperion_hk.Star_Dep_Temp1 = tempFloat;
-  all_hk_data->hyperion_hk.Star_Dep_Temp2 = tempFloat;
-  all_hk_data->hyperion_hk.Star_Dep_Temp3 = tempFloat;
-  all_hk_data->hyperion_hk.Star_Dep_Temp_Adc = tempFloat;
-  all_hk_data->hyperion_hk.Zenith_Temp1 = tempFloat;
-  all_hk_data->hyperion_hk.Zenith_Temp2 = tempFloat;
-  all_hk_data->hyperion_hk.Zenith_Temp3 = tempFloat;
-  all_hk_data->hyperion_hk.Zenith_Temp_Adc = tempFloat;
-  all_hk_data->hyperion_hk.Nadir_Pd1 = tempFloat;
-  all_hk_data->hyperion_hk.Port_Pd1 = tempFloat;
-  all_hk_data->hyperion_hk.Port_Pd2 = tempFloat;
-  all_hk_data->hyperion_hk.Port_Pd3 = tempFloat;
-  all_hk_data->hyperion_hk.Port_Dep_Pd1 = tempFloat;
-  all_hk_data->hyperion_hk.Port_Dep_Pd2 = tempFloat;
-  all_hk_data->hyperion_hk.Port_Dep_Pd3 = tempFloat;
-  all_hk_data->hyperion_hk.Star_Pd1 = tempFloat;
-  all_hk_data->hyperion_hk.Star_Pd2 = tempFloat;
-  all_hk_data->hyperion_hk.Star_Pd3 = tempFloat;
-  all_hk_data->hyperion_hk.Star_Dep_Pd1 = tempFloat;
-  all_hk_data->hyperion_hk.Star_Dep_Pd2 = tempFloat;
-  all_hk_data->hyperion_hk.Star_Dep_Pd3 = tempFloat;
-  all_hk_data->hyperion_hk.Zenith_Pd1 = tempFloat;
-  all_hk_data->hyperion_hk.Zenith_Pd2 = tempFloat;
-  all_hk_data->hyperion_hk.Zenith_Pd3 = tempFloat;
-  all_hk_data->hyperion_hk.Port_Voltage = tempFloat;
-  all_hk_data->hyperion_hk.Port_Dep_Voltage = tempFloat;
-  all_hk_data->hyperion_hk.Star_Voltage = tempFloat;
-  all_hk_data->hyperion_hk.Star_Dep_Voltage = tempFloat;
-  all_hk_data->hyperion_hk.Zenith_Voltage = tempFloat;
-  all_hk_data->hyperion_hk.Port_Current = tempFloat;
-  all_hk_data->hyperion_hk.Port_Dep_Current = tempFloat;
-  all_hk_data->hyperion_hk.Star_Current = tempFloat;
-  all_hk_data->hyperion_hk.Star_Dep_Current = tempFloat;
-  all_hk_data->hyperion_hk.Zenith_Current = tempFloat;
-
-  temp++;
-  tempTime += 30;
-  return SUCCESS;
+    temp++;
+    tempTime += 30;
+    return SUCCESS;
 }
 
 /**
@@ -379,53 +364,55 @@ Result mock_everyone(All_systems_housekeeping* all_hk_data) {
  *      FAILURE or SUCCESS
  */
 
-Result collect_hk_from_devices(All_systems_housekeeping* all_hk_data) {
-  /*populate struct by calling appropriate functions*/
-  #ifndef ADCS_IS_STUBBED
-    ADCS_returnState ADCS_return_code = HAL_ADCS_getHK(&all_hk_data->adcs_hk);             //ADCS get housekeeeing
-  #endif /* ADCS Housekeeping */
+Result collect_hk_from_devices(All_systems_housekeeping *all_hk_data) {
+/*populate struct by calling appropriate functions*/
+#ifndef ADCS_IS_STUBBED
+    ADCS_returnState ADCS_return_code = HAL_ADCS_getHK(&all_hk_data->adcs_hk); /* ADCS Housekeeping */
+#endif /* ADCS_IS_STUBBED */
 
-  #ifndef ATHENA_IS_STUBBED
-    int Athena_return_code = Athena_getHK(&all_hk_data->Athena_hk);    //Athena get temperature
-  #endif /* ADCS Housekeeping */
-  
-  #ifndef EPS_IS_STUBBED
+#ifndef ATHENA_IS_STUBBED
+    int Athena_return_code = Athena_getHK(&all_hk_data->Athena_hk);  /* Athena Housekeeping */
+#endif /* ATHENA_IS_STUBBED */
+
+#ifndef EPS_IS_STUBBED
     eps_refresh_instantaneous_telemetry();
     eps_instantaneous_telemetry_t eps = get_eps_instantaneous_telemetry();
 
-    //Adding these in order to get the startup telemetry - should be added elsewhere
+    // Adding these in order to get the startup telemetry - should be added elsewhere
     eps_refresh_startup_telemetry();
     eps_startup_telemetry_t eps_startup = get_eps_startup_telemetry();
-    EPS_getHK(&all_hk_data->EPS_hk, &all_hk_data->EPS_startup_hk);                                   //EPS get housekeeping
-  #endif /* EPS Housekeeping */
+    EPS_getHK(&all_hk_data->EPS_hk, &all_hk_data->EPS_startup_hk); /* EPS Housekeeping */
+#endif /* EPS_IS_STUBBED */
 
-  #ifndef UHF_IS_STUBBED
+#ifndef UHF_IS_STUBBED
+    UHF_return UHF_return_code;
     if(!uhf_is_busy()){
-        UHF_return UHF_return_code = UHF_getHK(&all_hk_data->UHF_hk);      //UHF get housekeeping
+        UHF_return_code = UHF_getHK(&all_hk_data->UHF_hk);      /* UHF Housekeeping */
+        vTaskDelay(ONE_SECOND);
     }
-    vTaskDelay(ONE_SECOND);
-  #endif /* UHF Housekeeping */
+#endif /* UHF_IS_STUBBED */
 
-  #ifndef SBAND_IS_STUBBED
-    STX_return STX_return_code = HAL_S_getHK(&all_hk_data->S_band_hk); //S_band get housekeeping
-  #endif /* SBAND Housekeeping */
+#ifndef SBAND_IS_STUBBED
+    STX_return STX_return_code = HAL_S_getHK(&all_hk_data->S_band_hk); /* SBAND Housekeeping */
+#endif /* SBAND_IS_STUBBED */
+
 
 #ifndef HYPERION_IS_STUBBED
-  #ifdef HYPERION_PANEL_3U
-    Hyperion_config1_getHK(&all_hk_data->hyperion_hk);
-  #endif /* HYPERION_PANEL_3U */
+#ifdef HYPERION_PANEL_3U
+    Hyperion_config1_getHK(&all_hk_data->hyperion_hk);                  /* Hyperion 3U Housekeeping */
+#endif /* HYPERION_PANEL_3U */
 
-  #ifdef HYPERION_PANEL_2U
-    Hyperion_config3_getHK(&all_hk_data->hyperion_hk);
-  #endif /* HYPERION_PANEL_2U */
-#endif
+#ifdef HYPERION_PANEL_2U
+    Hyperion_config3_getHK(&all_hk_data->hyperion_hk);                  /* Hyperion 2U Housekeeping */
+#endif /* HYPERION_PANEL_2U */
+#endif /* HYPERION_IS_STUBBED */
 
-  #ifndef CHARON_IS_STUBBED
-    Charon_getHK(&all_hk_data->charon_hk);
-  #endif /* Charon Housekeeping */
+#ifndef CHARON_IS_STUBBED
+    GPS_RETURNSTATE Charon_return_code = Charon_getHK(&all_hk_data->charon_hk);  /* Charon Houskeeping */
+#endif /* CHARON_IS_STUBBED */
 
-  /*consider if struct should hold error codes returned from these functions*/
-  return SUCCESS;
+    /*consider if struct should hold error codes returned from these functions*/
+    return SUCCESS;
 }
 
 /**
@@ -515,7 +502,10 @@ uint16_t get_size_of_housekeeping(All_systems_housekeeping *all_hk_data) {
                            sizeof(all_hk_data->UHF_hk) +       // currently 48U
                            sizeof(all_hk_data->S_band_hk) +    // currently 32U
                            sizeof(all_hk_data->adcs_hk) +      // currently 178U
-                           sizeof(all_hk_data->hyperion_hk);   // currently 188U
+                           sizeof(all_hk_data->hyperion_hk) + // currently 188U
+                           sizeof(all_hk_data->charon_hk)
+                           //sizeof(all_hk_data->payload_hk)
+                           ;
     return needed_size;
 }
 
@@ -533,36 +523,36 @@ uint16_t get_size_of_housekeeping(All_systems_housekeeping *all_hk_data) {
  *      FAILURE or SUCCESS
  */
 
-Result write_hk_to_file(uint16_t filenumber, All_systems_housekeeping* all_hk_data) {
-  int32_t fout = red_open(fileName, RED_O_CREAT | RED_O_RDWR); //open or create file to write binary
-  if (fout == -1) {
-    printf("Unexpected error %d from red_open()\r\n", (int)red_errno);
-    ex2_log("Failed to open or create file to write: '%s'\n", fileName);
-    return FAILURE;
-  }
-  uint16_t needed_size = get_size_of_housekeeping(all_hk_data);
-  
+Result write_hk_to_file(uint16_t filenumber, All_systems_housekeeping *all_hk_data) {
+    int32_t fout = red_open(fileName, RED_O_CREAT | RED_O_RDWR); // open or create file to write binary
+    if (fout == -1) {
+        printf("Unexpected error %d from red_open()\r\n", (int)red_errno);
+        ex2_log("Failed to open or create file to write: '%s'\n", fileName);
+        return FAILURE;
+    }
+    uint16_t needed_size = get_size_of_housekeeping(all_hk_data);
 
+    red_lseek(fout, (filenumber - 1) * needed_size, RED_SEEK_SET);
 
-  red_lseek(fout, (filenumber - 1) * needed_size, RED_SEEK_SET);
+    red_errno = 0;
+    /*The order of writes and subsequent reads must match*/
+    red_write(fout, &all_hk_data->hk_timeorder, sizeof(all_hk_data->hk_timeorder));
+    red_write(fout, &all_hk_data->adcs_hk, sizeof(all_hk_data->adcs_hk));
+    red_write(fout, &all_hk_data->Athena_hk, sizeof(all_hk_data->Athena_hk));
+    red_write(fout, &all_hk_data->EPS_hk, sizeof(all_hk_data->EPS_hk));
+    red_write(fout, &all_hk_data->UHF_hk, sizeof(all_hk_data->UHF_hk));
+    red_write(fout, &all_hk_data->S_band_hk, sizeof(all_hk_data->S_band_hk));
+    red_write(fout, &all_hk_data->hyperion_hk, sizeof(all_hk_data->hyperion_hk));
+    red_write(fout, &all_hk_data->charon_hk, sizeof(all_hk_data->charon_hk));
+    //red_write(fout, &all_hk_data->payload_hk, sizeof(all_hk_data->payload_hk));
 
-
-  red_errno = 0;
-  /*The order of writes and subsequent reads must match*/
-  red_write(fout, &all_hk_data->adcs_hk, sizeof(all_hk_data->adcs_hk));
-  red_write(fout, &all_hk_data->hk_timeorder, sizeof(all_hk_data->hk_timeorder));
-  red_write(fout, &all_hk_data->Athena_hk, sizeof(all_hk_data->Athena_hk));
-  red_write(fout, &all_hk_data->EPS_hk, sizeof(all_hk_data->EPS_hk));
-  red_write(fout, &all_hk_data->UHF_hk, sizeof(all_hk_data->UHF_hk));
-  red_write(fout, &all_hk_data->S_band_hk, sizeof(all_hk_data->S_band_hk));
-  red_write(fout, &all_hk_data->hyperion_hk, sizeof(all_hk_data->hyperion_hk));
-  
-
-  if(red_errno != 0) {
-    ex2_log("Failed to write to file: '%s'\n", fileName);
+    if (red_errno != 0) {
+        ex2_log("Failed to write to file: '%s'\n", fileName);
+        red_close(fout);
+        return FAILURE;
+    }
     red_close(fout);
     return SUCCESS;
-  }
 }
 
 /**
@@ -595,13 +585,15 @@ Result read_hk_from_file(uint16_t filenumber, All_systems_housekeeping *all_hk_d
 
     red_errno = 0;
     /*The order of writes and subsequent reads must match*/
-    red_read(fin, &all_hk_data->adcs_hk, sizeof(all_hk_data->adcs_hk));
     red_read(fin, &all_hk_data->hk_timeorder, sizeof(all_hk_data->hk_timeorder));
+    red_read(fin, &all_hk_data->adcs_hk, sizeof(all_hk_data->adcs_hk));
     red_read(fin, &all_hk_data->Athena_hk, sizeof(all_hk_data->Athena_hk));
     red_read(fin, &all_hk_data->EPS_hk, sizeof(all_hk_data->EPS_hk));
     red_read(fin, &all_hk_data->UHF_hk, sizeof(all_hk_data->UHF_hk));
     red_read(fin, &all_hk_data->S_band_hk, sizeof(all_hk_data->S_band_hk));
     red_read(fin, &all_hk_data->hyperion_hk, sizeof(all_hk_data->hyperion_hk));
+    red_read(fin, &all_hk_data->charon_hk, sizeof(all_hk_data->charon_hk));
+    // red_read(fin, &all_hk_data->payload_hk, sizeof(all_hk_data->payload_hk));
 
     if (red_errno != 0) {
         ex2_log("Failed to read: '%c'\n", fileName);
@@ -640,49 +632,33 @@ static inline void prv_give_lock(SemaphoreHandle_t *lock) { xSemaphoreGive(*lock
  */
 Result populate_and_store_hk_data(void) {
 
-  All_systems_housekeeping temp_hk_data;
+    All_systems_housekeeping temp_hk_data;
 
-  if(collect_hk_from_devices(&temp_hk_data) == FAILURE) {
-    ex2_log("Error collecting hk data from peripherals\n");
-  }
-
- 
-  //RTC_get_unix_time(&temp_hk_data.hk_timeorder.UNIXtimestamp);
-  
-  prv_get_lock(&f_count_lock); //lock
-  
-  if (config_loaded == 0){
-    if (load_config() == FAILURE) {
-      ex2_log("couldn't load config");
+    if (collect_hk_from_devices(&temp_hk_data) == FAILURE) {
+        ex2_log("Error collecting hk data from peripherals\n");
     }
-  }
-  config_loaded = 1;
 
-  //TEMP mock hk
-  //mock_everyone(&temp_hk_data); //not permanent
-  
-  temp_hk_data.hk_timeorder.dataPosition = current_file;
+    // RTC_get_unix_time(&temp_hk_data.hk_timeorder.UNIXtimestamp);
 
-  if(write_hk_to_file(current_file, &temp_hk_data) != SUCCESS) {
-    ex2_log("Housekeeping data lost\n");
-    prv_give_lock(&f_count_lock); //unlock
-    return FAILURE;
-  }
+    prv_get_lock(&f_count_lock); // lock
 
-  
-  if (dynamic_timestamp_array_handler(MAX_FILES) == SUCCESS) {
-    timestamps[current_file] = temp_hk_data.hk_timeorder.UNIXtimestamp;
-  } else {
-    ex2_log("Warning, failed to malloc for secondary data structure\n");
-  }
-  store_config(0);
+    if (config_loaded == 0) {
+        if (load_config() == FAILURE) {
+            ex2_log("couldn't load config");
+        }
+    }
+    config_loaded = 1;
 
-  ex2_log("%zu written to disk", current_file);
+    // TEMP mock hk
+    // mock_everyone(&temp_hk_data); //not permanent
 
-  ++current_file;
-  if(current_file > MAX_FILES) {
-    current_file = 1;
-  }
+    temp_hk_data.hk_timeorder.dataPosition = current_file;
+
+    if (write_hk_to_file(current_file, &temp_hk_data) != SUCCESS) {
+        ex2_log("Housekeeping data lost\n");
+        prv_give_lock(&f_count_lock); // unlock
+        return FAILURE;
+    }
 
     if (dynamic_timestamp_array_handler(MAX_FILES) == SUCCESS) {
         timestamps[current_file] = temp_hk_data.hk_timeorder.UNIXtimestamp;
@@ -885,6 +861,9 @@ Result fetch_historic_hk_and_transmit(csp_conn_t *conn, uint16_t limit, uint16_t
         memcpy(&packet->data[OUT_DATA_BYTE + used_size], &all_hk_data.hyperion_hk,
                sizeof(all_hk_data.hyperion_hk));
         used_size += sizeof(all_hk_data.hyperion_hk);
+        memcpy(&packet->data[OUT_DATA_BYTE + used_size], &all_hk_data.charon_hk,
+               sizeof(all_hk_data.charon_hk));
+        used_size += sizeof(all_hk_data.charon_hk);
 
         set_packet_length(packet, used_size + 2);
 
@@ -957,11 +936,9 @@ SAT_returnState hk_service_app(csp_conn_t *conn, csp_packet_t *packet) {
         before_id = data16[1];
         before_time = ((uint32_t *)data16)[1];
 
-        if (!csp_send(conn, packet, 50)) {
-            csp_buffer_free(packet);
-            if (fetch_historic_hk_and_transmit(conn, limit, before_id, before_time) != SUCCESS) {
-                return SATR_ERROR;
-            }
+        csp_buffer_free(packet);
+        if (fetch_historic_hk_and_transmit(conn, limit, before_id, before_time) != SUCCESS) {
+            return SATR_ERROR;
         }
         break;
 
@@ -1022,7 +999,7 @@ SAT_returnState start_housekeeping_service(void) {
     TaskHandle_t svc_tsk;
     taskFunctions svc_funcs = {0};
     svc_funcs.getCounterFunction = get_svc_wdt_counter;
-    if (xTaskCreate((TaskFunction_t)housekeeping_service, "start_housekeeping_service", 400, NULL,
+    if (xTaskCreate((TaskFunction_t)housekeeping_service, "start_housekeeping_service", 600, NULL,
                     NORMAL_SERVICE_PRIO, &svc_tsk) != pdPASS) {
         ex2_log("FAILED TO CREATE TASK start_housekeeping_service\n");
         return SATR_ERROR;
