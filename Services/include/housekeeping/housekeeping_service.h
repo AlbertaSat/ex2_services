@@ -50,7 +50,7 @@ typedef enum { SUCCESS = 0, FAILURE = 1 } Result;
 typedef enum { GET_HK = 0, SET_MAX_FILES = 1, GET_MAX_FILES = 2 } subservice;
 
 /*hk data sample*/
-typedef enum { EPS, ADCS, OBC, COMMS, DFGM } hardware;
+typedef enum { EPS, ADCS, OBC, COMMS} hardware;
 
 /*--------------hk data----------------*/
 
