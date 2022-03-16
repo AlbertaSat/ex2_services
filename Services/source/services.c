@@ -51,10 +51,12 @@ SAT_returnState start_service_server(void) {
     }
     ex2_task_init_mutex();
     start_cli_service();
-    if (//start_communication_service() != SATR_OK || start_time_management_service() != SATR_OK ||
-        start_gs_scheduler_service() != SATR_OK ||
-        start_housekeeping_service() != SATR_OK || start_general_service() != SATR_OK ||
-        start_updater_service() != SATR_OK || start_logger_service() != SATR_OK) {
+    if (//start_communication_service() != SATR_OK ||
+        start_time_management_service() != SATR_OK ||
+        start_gs_scheduler_service() != SATR_OK) {
+        //start_housekeeping_service() != SATR_OK || start_general_service() != SATR_OK ||
+        //start_updater_service() != SATR_OK ||
+        //start_logger_service() != SATR_OK) {
         return SATR_ERROR;
     }
     return SATR_OK;

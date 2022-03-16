@@ -90,7 +90,7 @@ typedef struct __attribute__((packed)) {
 
 static number_of_cmds_t num_of_cmds;
 
-//scheduled_commands_t scheduled_command[MAX_NUM_CMDS];
+typedef enum { SET_SCHEDULE = 48, GET_SCHEDULE = 49 } Scheduler_Subtype;
 
 //SAT_returnState gs_cmds_scheduler_service_app(csp_packet_t *gs_cmds);
 SAT_returnState gs_cmds_scheduler_service_app(char *gs_cmds);

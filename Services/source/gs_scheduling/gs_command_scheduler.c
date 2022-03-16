@@ -24,79 +24,99 @@ int delay_aborted = 0;
  */
 SAT_returnState gs_cmds_scheduler_service_app(char *gs_cmds) {
 //SAT_returnState gs_cmds_scheduler_service_app(csp_packet_t *gs_cmds) {
-    TaskHandle_t SchedulerHandler;
-    // allocating buffer for MAX_NUM_CMDS numbers of incoming commands
-    scheduled_commands_t *cmds = (scheduled_commands_t*)calloc(MAX_NUM_CMDS, sizeof(scheduled_commands_t));
-    // parse the commands
-    int number_of_cmds = prv_set_gs_scheduler(gs_cmds, cmds);
-    //int number_of_cmds = prv_set_gs_scheduler(gs_cmds->data, cmds);
-    // calculate frequency of cmds. Non-repetitive commands have a frequency of 0
-    scheduled_commands_unix_t *sorted_cmds = (scheduled_commands_unix_t*)calloc(number_of_cmds, sizeof(scheduled_commands_unix_t));
-    calc_cmd_frequency(cmds, number_of_cmds, sorted_cmds);
-    // open file that stores the cmds in the SD card
-    int32_t fout = red_open(fileName1, RED_O_RDONLY | RED_O_RDWR);
+    //uint8_t ser_subtype = (uint8_t)gs_cmds->data[SUBSERVICE_BYTE];
+    uint8_t ser_subtype = (uint8_t)gs_cmds[0];
+    int8_t status;
 
-    // if file does not exist, create a scheduler
-    if (fout == -1) {
-        // sort the commands
-        sort_cmds(sorted_cmds, number_of_cmds);
-        // write cmds to file
-        int f_write = write_cmds_to_file(1, sorted_cmds, number_of_cmds, fileName1);
-        if (f_write != 0) {
-            ex2_log("Failed to create file: '%s'\n", fileName1);
-            return SATR_ERROR;
-        }
-        // create the scheduler
-        //TODO: review stack size
-        xTaskCreate(vSchedulerHandler, "scheduler", 1000, NULL, GS_SCHEDULER_TASK_PRIO, SchedulerHandler);
-    }
+    switch(ser_subtype) {
+    case SET_SCHEDULE:
+        TaskHandle_t SchedulerHandler;
+        // allocating buffer for MAX_NUM_CMDS numbers of incoming commands
+        scheduled_commands_t *cmds = (scheduled_commands_t*)calloc(MAX_NUM_CMDS, sizeof(scheduled_commands_t));
+        // parse the commands
+        int number_of_cmds = prv_set_gs_scheduler(gs_cmds, cmds);
+        //int number_of_cmds = prv_set_gs_scheduler(gs_cmds->data, cmds);
+        // calculate frequency of cmds. Non-repetitive commands have a frequency of 0
+        scheduled_commands_unix_t *sorted_cmds = (scheduled_commands_unix_t*)calloc(number_of_cmds, sizeof(scheduled_commands_unix_t));
+        calc_cmd_frequency(cmds, number_of_cmds, sorted_cmds);
+        // open file that stores the cmds in the SD card
+        int32_t fout = red_open(fileName1, RED_O_RDONLY | RED_O_RDWR);
 
-    // if file already exists, modify the existing scheduler
-    else if (fout != -1) {
-        // TODO: use mutex/semaphores to protect the file while being written
-        // get file size through file stats
-        REDSTAT scheduler_stat;
-        int32_t f_stat = red_fstat(fout, &scheduler_stat);
-        if (f_stat == -1) {
-            printf("Unexpected error %d from f_stat()\r\n", (int)red_errno);
-            ex2_log("Failed to read file stats from: '%s'\n", fileName1);
+        // if file does not exist, create a scheduler
+        if (fout == -1) {
+            // sort the commands
+            sort_cmds(sorted_cmds, number_of_cmds);
+            // write cmds to file
+            int f_write = write_cmds_to_file(1, sorted_cmds, number_of_cmds, fileName1);
+            if (f_write != 0) {
+                ex2_log("Failed to create file: '%s'\n", fileName1);
+                return SATR_ERROR;
+            }
+            // create the scheduler
+            //TODO: review stack size
+            xTaskCreate(vSchedulerHandler, "scheduler", 1000, NULL, GS_SCHEDULER_TASK_PRIO, SchedulerHandler);
+        }
+
+        // if file already exists, modify the existing scheduler
+        else if (fout != -1) {
+            // TODO: use mutex/semaphores to protect the file while being written
+            // get file size through file stats
+            REDSTAT scheduler_stat;
+            int32_t f_stat = red_fstat(fout, &scheduler_stat);
+            if (f_stat == -1) {
+                printf("Unexpected error %d from f_stat()\r\n", (int)red_errno);
+                ex2_log("Failed to read file stats from: '%s'\n", fileName1);
+                red_close(fout);
+                return SATR_ERROR;
+            }
+            // get number of existing cmds
+            uint32_t num_existing_cmds = scheduler_stat.st_size / sizeof(scheduled_commands_unix_t);
+            int total_cmds = number_of_cmds + num_existing_cmds;
+            // TODO: use error handling to check calloc was successful
+            scheduled_commands_unix_t *existing_cmds = (scheduled_commands_unix_t*)calloc(num_existing_cmds, sizeof(scheduled_commands_unix_t));
+            scheduled_commands_unix_t *updated_cmds = (scheduled_commands_unix_t*)calloc(total_cmds, sizeof(scheduled_commands_unix_t));
+            // read file
+            int32_t f_read = red_read(fout, &existing_cmds, (uint32_t)scheduler_stat.st_size);
+            if (f_read == -1) {
+                printf("Unexpected error %d from red_read()\r\n", (int)red_errno);
+                ex2_log("Failed to read file: '%s'\n", fileName1);
+                red_close(fout);
+                return SATR_ERROR;
+            }
+            // combine new commands and old commands into a single struct for sorting
+            memcpy(&updated_cmds,&sorted_cmds,sizeof(sorted_cmds));
+            memcpy((updated_cmds+number_of_cmds),&existing_cmds,sizeof(existing_cmds));
+            sort_cmds(updated_cmds, total_cmds);
+            // write new cmds to file
+            write_cmds_to_file(1, updated_cmds, total_cmds, fileName1);
+            // close file
             red_close(fout);
-            return SATR_ERROR;
+            // set Abort delay flag to 1
+            if (xTaskAbortDelay(SchedulerHandler) == pdPASS) {
+                delay_aborted = 1;
+            }
+            // free calloc
+            free(existing_cmds);
+            free(updated_cmds);
         }
-        // get number of existing cmds
-        uint32_t num_existing_cmds = scheduler_stat.st_size / sizeof(scheduled_commands_unix_t);
-        int total_cmds = number_of_cmds + num_existing_cmds;
-        // TODO: use error handling to check calloc was successful
-        scheduled_commands_unix_t *existing_cmds = (scheduled_commands_unix_t*)calloc(num_existing_cmds, sizeof(scheduled_commands_unix_t));
-        scheduled_commands_unix_t *updated_cmds = (scheduled_commands_unix_t*)calloc(total_cmds, sizeof(scheduled_commands_unix_t));
-        // read file
-        int32_t f_read = red_read(fout, &existing_cmds, (uint32_t)scheduler_stat.st_size);
-        if (f_read == -1) {
-            printf("Unexpected error %d from red_read()\r\n", (int)red_errno);
-            ex2_log("Failed to read file: '%s'\n", fileName1);
-            red_close(fout);
-            return SATR_ERROR;
-        }
-        // combine new commands and old commands into a single struct for sorting
-        memcpy(&updated_cmds,&sorted_cmds,sizeof(sorted_cmds));
-        memcpy((updated_cmds+number_of_cmds),&existing_cmds,sizeof(existing_cmds));
-        sort_cmds(updated_cmds, total_cmds);
-        // write new cmds to file
-        write_cmds_to_file(1, updated_cmds, total_cmds, fileName1);
-        // close file
-        red_close(fout);
-        // set Abort delay flag to 1
-        if (xTaskAbortDelay(SchedulerHandler) == pdPASS) {
-            delay_aborted = 1;
-        }
+    
         // free calloc
-        free(existing_cmds);
-        free(updated_cmds);
-    }
+        free(cmds);
+        free(sorted_cmds);
 
-    // free calloc
-    free(cmds);
-    free(sorted_cmds);
+        break;
+    
+    case GET_SCHEDULE:
+        //this code is for testing purposes
+//        status = 1;
+//        memcpy(&gs_cmds->data[STATUS_BYTE], &status, sizeof(int8_t));
+//        set_packet_length(gs_cmds, sizeof(int8_t) + 1); // plus one for sub-service
+        break;
+
+    default:
+        ex2_log("No such subservice\n");
+        return SATR_PKT_ILLEGAL_SUBSERVICE;
+    }
 
     /*consider if struct should hold error codes returned from these functions*/
     return SATR_OK;
@@ -116,9 +136,9 @@ int prv_set_gs_scheduler(char *cmd_buff, scheduled_commands_t *cmds) {
     int number_of_cmds = 0;
     // Parse the commands
     // Initialize counters that point to different locations in the string of commands
-    int old_str_position = 0;
-    int str_position_1 = 0;
-    int str_position_2 = 0;
+    int old_str_position = IN_DATA_BYTE;
+    int str_position_1 = IN_DATA_BYTE;
+    int str_position_2 = IN_DATA_BYTE;
 
     while (number_of_cmds < MAX_NUM_CMDS) {
         // A carraige followed by a space or nothing indicates there is no more commands
@@ -553,7 +573,8 @@ SAT_returnState sort_cmds(scheduled_commands_unix_t *sorted_cmds, int number_of_
  */
 Result write_cmds_to_file(int filenumber, scheduled_commands_unix_t *scheduled_cmds, int number_of_cmds, char* fileName) {
     int32_t fout = red_open(fileName, RED_O_CREAT | RED_O_RDWR); // open or create file to write binary
-    if (fout == -1) {
+    //TODO: good practice to check for <0 instead of == -1
+    if (fout < 0) {
         printf("Unexpected error %d from red_open()\r\n", (int)red_errno);
         ex2_log("Failed to open or create file to write: '%s'\n", fileName);
         return FAILURE;
@@ -600,40 +621,123 @@ SAT_returnState start_gs_scheduler_service(void *param) {
     /*The code below is for testing only, comment out from final code*/
     //=====================================================================
     //char *test_cmd = "12 * * 14 2 2 52 obc.time_management.get_time()\n ";
-    char *test_cmd = "50 1 2 3 24 2 52   obc.time_management.get_time()\n 12 * * 14 2 2 52 obc.time_management.get_time()\n ";
-    int rtc_test = RTCMK_SetUnix(1646289251); //march 02
-    time_t rtc_unix_1, rtc_unix_2;
-    int rtc_unix_test = RTCMK_GetUnix(&rtc_unix_1);
-    rtc_test = RTCMK_SetUnix(1646375651); //march 03
-    rtc_unix_test = RTCMK_GetUnix(&rtc_unix_2);
+    //char *test_command = "050 1 2 3 24 2 52   obc.time_management.get_time()\n 12 * * 14 2 2 52 obc.time_management.get_time()\n ";
+    
+    //csp_packet_t *test_cmd;
+    //memcpy(test_cmd->data, test_command, sizeof(test_command));
+    //char *test_cmd = "050 1 2 3 24 2 52   obc.time_management.get_time()\n 12 * * 14 2 2 52 obc.time_management.get_time()\n ";
+    char *test_cmd = "test string\n ";
+    uint8_t test_subport = 11;
+    uint32_t test_cmd_int = 1646289251;
+    csp_packet_t *packet = csp_buffer_get(50);
+    //unsigned int count = 0;
+    //snprintf((char *) packet->data, csp_buffer_data_size(), "Hello World (%u)", ++count);
+    memcpy(packet->data,&test_subport, sizeof(test_subport));
+    memcpy(packet->data+1, &test_cmd_int, sizeof(test_cmd_int));
+    //packet->length = (strlen((char *) packet->data) + 1); /* include the 0 termination */
+    packet->length = (sizeof(test_cmd_int)+1); /* include the 0 termination */
+
+    csp_conn_t *connect;
+    connect = csp_connect(CSP_PRIO_NORM,  1,  8, CSP_MAX_TIMEOUT, CSP_SO_NONE);
+    int send_packet_test = csp_send(connect, packet, CSP_MAX_TIMEOUT);
+    int close_connection_test = csp_close(connect);
+
+    //int csp_test = csp_sendto(CSP_PRIO_NORM, packet->id.dst, packet->id.dport, 0, CSP_O_NONE, packet->data, CSP_MAX_TIMEOUT);
+    //int csp_test = csp_sendto(CSP_PRIO_NORM, 1, 8, 255, CSP_O_RDP, packet->data32, CSP_MAX_TIMEOUT);
+    //CSP_PRIO_NORM, address, dport, 0, CSP_O_NONE, packet, CSP_SEND_TIMEOUT
+    //int rtc_test = RTCMK_SetUnix(1646289251); //march 02
+    //time_t rtc_unix_1, rtc_unix_2;
+    //int rtc_unix_test = RTCMK_GetUnix(&rtc_unix_1);
+    //rtc_test = RTCMK_SetUnix(1646375651); //march 03
+    //rtc_unix_test = RTCMK_GetUnix(&rtc_unix_2);
+    char* fileName2 = "VOL0:/test.TMP";
+    //char fileName2[] = "VOL0:/test.TMP";
+    char *file_output;
+    int file_output_int;
+    // open file from SD card
+    int32_t fout = red_open(fileName2, RED_O_CREAT | RED_O_RDWR);
+    if (fout == -1) {
+        printf("Unexpected error %d from red_open()\r\n", (int)red_errno);
+        ex2_log("Failed to open or create file to write: '%s'\n", fileName2);
+        vTaskDelete(0);
+        return SATR_ERROR;
+    }
+    int needed_size = 10;
+//    int32_t f_write = red_write(fout, test_cmd, needed_size);
+//    if (red_errno != 0) {
+//        ex2_log("Failed to write to file: '%s'\n", fileName2);
+//        red_close(fout);
+//        return SATR_ERROR;
+//    }
+    int32_t f_write = red_write(fout, &test_cmd_int, sizeof(test_cmd_int));
+    if (red_errno != 0) {
+            ex2_log("Failed to write to file: '%s'\n", fileName2);
+            red_close(fout);
+            return SATR_ERROR;
+        }
+    // read file
+//    int32_t f_read = red_read(fout, file_output, needed_size);
+//    if (f_read < 0) {
+//        printf("Unexpected error %d from red_read()\r\n", (int)red_errno);
+//        ex2_log("Failed to read file: '%s'\n", fileName2);
+//        red_close(fout);
+//        return SATR_ERROR;
+//    }
+    int32_t f_read = red_read(fout, &file_output_int, sizeof(test_cmd_int));
+        if (f_read < 0) {
+            printf("Unexpected error %d from red_read()\r\n", (int)red_errno);
+            ex2_log("Failed to read file: '%s'\n", fileName2);
+            red_close(fout);
+            return SATR_ERROR;
+        }
+    //close file
+        int32_t f_close = red_close(fout);
+        if (f_close < 0) {
+                printf("Unexpected error %d from red_close()\r\n", (int)red_errno);
+                ex2_log("Failed to open or create file to write: '%s'\n", fileName2);
+                vTaskDelete(0);
+                return SATR_ERROR;
+            }
+    // delete file once all cmds have been executed
+    int32_t f_delete = red_unlink(fileName2);
+    if (f_delete < 0) {
+        printf("Unexpected error %d from f_delete()\r\n", (int)red_errno);
+        ex2_log("Failed to close file: '%s'\n", fileName2);
+        return SATR_ERROR;
+    }
     
     gs_cmds_scheduler_service_app(test_cmd);
 
     //char *test_cmd = "50 1 2 3 24 2 52       obc.time_management.get_time()\n 12 * 13 14 2 2 52 obc.time_management.get_time()\n ";
-    int test_scanf = 0;
-    char *test_string = &test_cmd[2];
-    int f_scanf = sscanf(test_string,"%d", &test_scanf);
-    // allocating buffer for MAX_NUM_CMDS numbers of incoming commands
-    scheduled_commands_t *cmds = (scheduled_commands_t*)calloc(MAX_NUM_CMDS, sizeof(scheduled_commands_t));
-    // parse the commands
-    int number_of_cmds = prv_set_gs_scheduler(test_cmd, cmds);
-    // calculate frequency of cmds. Non-repetitive commands have a frequency of 0
-    scheduled_commands_unix_t *sorted_cmds = (scheduled_commands_unix_t*)calloc(number_of_cmds, sizeof(scheduled_commands_unix_t));
-    calc_cmd_frequency(cmds, number_of_cmds, sorted_cmds);
+//    int test_scanf = 0;
+//    char *test_string = &test_cmd[2];
+//    int f_scanf = sscanf(test_string,"%d", &test_scanf);
+//    // allocating buffer for MAX_NUM_CMDS numbers of incoming commands
+//    scheduled_commands_t *cmds = (scheduled_commands_t*)calloc(MAX_NUM_CMDS, sizeof(scheduled_commands_t));
+//    // parse the commands
+//    int number_of_cmds = prv_set_gs_scheduler(test_cmd, cmds);
+//    // calculate frequency of cmds. Non-repetitive commands have a frequency of 0
+//    scheduled_commands_unix_t *sorted_cmds = (scheduled_commands_unix_t*)calloc(number_of_cmds, sizeof(scheduled_commands_unix_t));
+//    calc_cmd_frequency(cmds, number_of_cmds, sorted_cmds);
+//    free(cmds);
+//    free(sorted_cmds);
     //=====================================================================
     /*TODO: delete code above after testing is complete*/
 
     for (;;) {
         csp_conn_t *conn;
         csp_packet_t *packet;
+        continue;
         if ((conn = csp_accept(sock, CSP_MAX_TIMEOUT)) == NULL) {
             /* timeout */
+            ex2_log("woke up");
             continue;
         }
         //TODO: is a watchdog needed?
         //svc_wdt_counter++;
 
         while ((packet = csp_read(conn, 50)) != NULL) {
+            ex2_log("received packet");
             if (gs_cmds_scheduler_service_app(&packet) != SATR_OK) {
                 //TODO: define max # of commands that can be scheduled per CSP packet, incorporate this limit into the gs ops manual
                 ex2_log("Error responding to packet");
