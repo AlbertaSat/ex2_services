@@ -31,6 +31,7 @@
 #include <os_task.h>
 #include "diagnostic.h"
 #include "system.h"
+#include "deployablescontrol.h"
 
 SAT_returnState general_app(csp_packet_t *packet);
 void general_service(void *param);
@@ -159,6 +160,15 @@ SAT_returnState general_app(csp_packet_t *packet) {
         unsigned int timeout_new = 0;
         memcpy(&timeout_new, &packet->data[IN_DATA_BYTE], sizeof(unsigned int));
         status = set_uhf_watchdog_delay(timeout_new);
+        memcpy(&packet->data[STATUS_BYTE], &status, sizeof(int8_t));
+        set_packet_length(packet, sizeof(int8_t) + 1); // +1 for subservice
+        csp_send(conn, packet, CSP_TIMEOUT);
+        break;
+
+    case DEPLOY_DEPLOYABLES:
+        unsigned int sw = 0;
+        memcpy(&sw, &packet->data[IN_DATA_BYTE], sizeof(unsigned int));
+        status = deploy(sw);
         memcpy(&packet->data[STATUS_BYTE], &status, sizeof(int8_t));
         set_packet_length(packet, sizeof(int8_t) + 1); // +1 for subservice
         csp_send(conn, packet, CSP_TIMEOUT);

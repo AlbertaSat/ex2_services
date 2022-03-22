@@ -29,6 +29,7 @@ typedef enum {
     REBOOT = 0,
     GET_UHF_WATCHDOG_TIMEOUT = 1,
     SET_UHF_WATCHDOG_TIMEOUT = 2,
+    DEPLOY_DEPLOYABLES = 3,
 } General_Subtype;
 
 typedef enum { bootloader = 'B', golden = 'G', application = 'A' } reboot_mode;
