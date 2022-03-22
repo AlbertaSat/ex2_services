@@ -126,7 +126,7 @@ SAT_returnState start_gps_services(TaskHandle_t *rtc_handle, TaskHandle_t *nmea_
  */
 void time_management_service(void *param) {
     csp_socket_t *sock;
-    sock = csp_socket(CSP_SO_RDPREQ); // require RDP connection
+    sock = csp_socket(CSP_SO_NONE); // require RDP connection
     csp_bind(sock, TC_TIME_MANAGEMENT_SERVICE);
     csp_listen(sock, SERVICE_BACKLOG_LEN);
     svc_wdt_counter++;

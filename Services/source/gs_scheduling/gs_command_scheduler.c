@@ -627,82 +627,84 @@ SAT_returnState start_gs_scheduler_service(void *param) {
     //memcpy(test_cmd->data, test_command, sizeof(test_command));
     //char *test_cmd = "050 1 2 3 24 2 52   obc.time_management.get_time()\n 12 * * 14 2 2 52 obc.time_management.get_time()\n ";
     char *test_cmd = "test string\n ";
-    uint8_t test_subport = 11;
+    uint8_t test_subservice = 11;
     uint32_t test_cmd_int = 1646289251;
-    csp_packet_t *packet = csp_buffer_get(50);
+    csp_packet_t *packet = csp_buffer_get(5);
     //unsigned int count = 0;
     //snprintf((char *) packet->data, csp_buffer_data_size(), "Hello World (%u)", ++count);
-    memcpy(packet->data,&test_subport, sizeof(test_subport));
+    memcpy(&packet->data[SUBSERVICE_BYTE],&test_subservice, sizeof(test_subservice));
     memcpy(packet->data+1, &test_cmd_int, sizeof(test_cmd_int));
     //packet->length = (strlen((char *) packet->data) + 1); /* include the 0 termination */
-    packet->length = (sizeof(test_cmd_int)+1); /* include the 0 termination */
+    packet->length = (5); /* include the 0 termination */
+    ex2_log("timer started");
+    vTaskDelay(5000);
+    ex2_log("timer called again");
+    vTaskDelay(3000);
+    ex2_log("timer called again");
 
     csp_conn_t *connect;
     connect = csp_connect(CSP_PRIO_NORM,  1,  8, CSP_MAX_TIMEOUT, CSP_SO_NONE);
     int send_packet_test = csp_send(connect, packet, CSP_MAX_TIMEOUT);
+    int read_packet_test = csp_read(connect, CSP_MAX_TIMEOUT);
+    int check_status = packet->data[STATUS_BYTE];
     int close_connection_test = csp_close(connect);
-
-    //int csp_test = csp_sendto(CSP_PRIO_NORM, packet->id.dst, packet->id.dport, 0, CSP_O_NONE, packet->data, CSP_MAX_TIMEOUT);
-    //int csp_test = csp_sendto(CSP_PRIO_NORM, 1, 8, 255, CSP_O_RDP, packet->data32, CSP_MAX_TIMEOUT);
-    //CSP_PRIO_NORM, address, dport, 0, CSP_O_NONE, packet, CSP_SEND_TIMEOUT
-    //int rtc_test = RTCMK_SetUnix(1646289251); //march 02
-    //time_t rtc_unix_1, rtc_unix_2;
-    //int rtc_unix_test = RTCMK_GetUnix(&rtc_unix_1);
-    //rtc_test = RTCMK_SetUnix(1646375651); //march 03
+//
+//    //int csp_test = csp_sendto(CSP_PRIO_NORM, packet->id.dst, packet->id.dport, 0, CSP_O_NONE, packet->data, CSP_MAX_TIMEOUT);
+//    //int csp_test = csp_sendto(CSP_PRIO_NORM, 1, 8, 255, CSP_O_RDP, packet->data32, CSP_MAX_TIMEOUT);
+//    //CSP_PRIO_NORM, address, dport, 0, CSP_O_NONE, packet, CSP_SEND_TIMEOUT
+//    //int rtc_test = RTCMK_SetUnix(1646289251); //march 02
+//    //time_t rtc_unix_1, rtc_unix_2;
+//    //int rtc_unix_test = RTCMK_GetUnix(&rtc_unix_1);
+//    //rtc_test = RTCMK_SetUnix(1646375651); //march 03
     //rtc_unix_test = RTCMK_GetUnix(&rtc_unix_2);
+    //--------------------------------- file system test ------------------------------------//
     char* fileName2 = "VOL0:/test.TMP";
     //char fileName2[] = "VOL0:/test.TMP";
     char *file_output;
-    int file_output_int;
+//    int file_output_int;
     // open file from SD card
     int32_t fout = red_open(fileName2, RED_O_CREAT | RED_O_RDWR);
     if (fout == -1) {
         printf("Unexpected error %d from red_open()\r\n", (int)red_errno);
         ex2_log("Failed to open or create file to write: '%s'\n", fileName2);
+        red_errno = 0;
         vTaskDelete(0);
         return SATR_ERROR;
     }
-    int needed_size = 10;
-//    int32_t f_write = red_write(fout, test_cmd, needed_size);
-//    if (red_errno != 0) {
-//        ex2_log("Failed to write to file: '%s'\n", fileName2);
-//        red_close(fout);
-//        return SATR_ERROR;
-//    }
-    int32_t f_write = red_write(fout, &test_cmd_int, sizeof(test_cmd_int));
+    int needed_size = 13;
+    int32_t f_write = red_write(fout, test_cmd, needed_size + 1);
     if (red_errno != 0) {
-            ex2_log("Failed to write to file: '%s'\n", fileName2);
-            red_close(fout);
-            return SATR_ERROR;
-        }
+        ex2_log("Failed to write to file: '%s'\n", fileName2);
+        red_errno = 0;
+        red_close(fout);
+        return SATR_ERROR;
+    }
+    red_lseek(fout, 0, 0);
     // read file
-//    int32_t f_read = red_read(fout, file_output, needed_size);
-//    if (f_read < 0) {
-//        printf("Unexpected error %d from red_read()\r\n", (int)red_errno);
-//        ex2_log("Failed to read file: '%s'\n", fileName2);
-//        red_close(fout);
-//        return SATR_ERROR;
-//    }
-    int32_t f_read = red_read(fout, &file_output_int, sizeof(test_cmd_int));
-        if (f_read < 0) {
-            printf("Unexpected error %d from red_read()\r\n", (int)red_errno);
-            ex2_log("Failed to read file: '%s'\n", fileName2);
-            red_close(fout);
-            return SATR_ERROR;
-        }
+    int32_t f_read = red_read(fout, file_output, needed_size + 1);
+    if (f_read < 0) {
+        printf("Unexpected error %d from red_read()\r\n", (int)red_errno);
+        ex2_log("Failed to read file: '%s'\n", fileName2);
+        red_errno = 0;
+        red_close(fout);
+        return SATR_ERROR;
+    }
     //close file
-        int32_t f_close = red_close(fout);
-        if (f_close < 0) {
-                printf("Unexpected error %d from red_close()\r\n", (int)red_errno);
-                ex2_log("Failed to open or create file to write: '%s'\n", fileName2);
-                vTaskDelete(0);
-                return SATR_ERROR;
-            }
+    int32_t f_close = red_close(fout);
+    if (f_close < 0) {
+        printf("Unexpected error %d from red_close()\r\n", (int)red_errno);
+        ex2_log("Failed to open or create file to write: '%s'\n", fileName2);
+        red_errno = 0;
+        vTaskDelete(0);
+        return SATR_ERROR;
+    }
     // delete file once all cmds have been executed
     int32_t f_delete = red_unlink(fileName2);
     if (f_delete < 0) {
         printf("Unexpected error %d from f_delete()\r\n", (int)red_errno);
         ex2_log("Failed to close file: '%s'\n", fileName2);
+        //TODO: ensure all red_errno are reinitialized (check housekeeping as well for consistency)
+        red_errno = 0;
         return SATR_ERROR;
     }
     
