@@ -165,10 +165,19 @@ SAT_returnState general_app(csp_packet_t *packet) {
         csp_send(conn, packet, CSP_TIMEOUT);
         break;
 
-    case DEPLOY_DEPLOYABLES:
+    case DEPLOY_SWITCH:
         unsigned int sw = 0;
         memcpy(&sw, &packet->data[IN_DATA_BYTE], sizeof(unsigned int));
         status = deploy(sw);
+        memcpy(&packet->data[STATUS_BYTE], &status, sizeof(int8_t));
+        set_packet_length(packet, sizeof(int8_t) + 1); // +1 for subservice
+        csp_send(conn, packet, CSP_TIMEOUT);
+        break;
+
+    case GET_SWITCH_STATUS:
+        unsigned int sw = 0;
+        memcpy(&sw, &packet->data[IN_DATA_BYTE], sizeof(unsigned int));
+        status = switchstatus(sw);
         memcpy(&packet->data[STATUS_BYTE], &status, sizeof(int8_t));
         set_packet_length(packet, sizeof(int8_t) + 1); // +1 for subservice
         csp_send(conn, packet, CSP_TIMEOUT);
