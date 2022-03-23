@@ -358,7 +358,7 @@ int prv_set_gs_scheduler(char *cmd_buff, scheduled_commands_t *cmds) {
 
         /*-----------------------Fetch gs command as am embedded CSP packet-----------------------*/
         //Extract the embedded CSP packet
-        csp_packet_t *packet = csp_buffer_clone(packet);
+        (cmds + number_of_cmds)->embedded_packet = csp_buffer_clone(packet);
 
         //Increment the pointers to read the next line of commands
         int data_len = (int)packet->length;
