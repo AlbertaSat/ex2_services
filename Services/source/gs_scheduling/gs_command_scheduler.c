@@ -22,10 +22,10 @@ int delay_aborted = 0;
  * @return SAT_returnState
  *      SATR_OK or SATR_ERROR
  */
-SAT_returnState gs_cmds_scheduler_service_app(char *gs_cmds) {
-//SAT_returnState gs_cmds_scheduler_service_app(csp_packet_t *gs_cmds) {
-    //uint8_t ser_subtype = (uint8_t)gs_cmds->data[SUBSERVICE_BYTE];
-    uint8_t ser_subtype = (uint8_t)gs_cmds[0];
+//SAT_returnState gs_cmds_scheduler_service_app(char *gs_cmds) {
+SAT_returnState gs_cmds_scheduler_service_app(csp_packet_t *gs_cmds) {
+    uint8_t ser_subtype = (uint8_t)gs_cmds->data[SUBSERVICE_BYTE];
+    //uint8_t ser_subtype = (uint8_t)gs_cmds[0];
     int8_t status;
 
     switch(ser_subtype) {
@@ -356,8 +356,18 @@ int prv_set_gs_scheduler(char *cmd_buff, scheduled_commands_t *cmds) {
         old_str_position = str_position_2;
         str_position_1 = str_position_2;
 
-        /*-----------------------Fetch gs command-----------------------*/
-        //Count the number of characters in the command
+        /*-----------------------Fetch gs command as am embedded CSP packet-----------------------*/
+        //Extract the embedded CSP packet
+        csp_packet_t *packet = csp_buffer_clone(packet);
+
+        //Increment the pointers to read the next line of commands
+        int data_len = (int)packet->length;
+        int total_csp_len = sizeof(packet->padding) + sizeof(packet->length) + sizeof(packet->id) + data_len;
+        str_position_2 += total_csp_len;
+        old_str_position = str_position_2;
+        str_position_1 = str_position_2;
+
+        /*
         if (cmd_buff[str_position_2] == '\n') {
             //TODO: discuss whether this is the best way to log error
             ex2_log("command is empty for command: %d\n", number_of_cmds+1);
@@ -384,6 +394,7 @@ int prv_set_gs_scheduler(char *cmd_buff, scheduled_commands_t *cmds) {
         old_str_position = str_position_2;
         str_position_1 = str_position_2;
         //str_position_1++;
+        */
 
         number_of_cmds++;
     }
@@ -729,10 +740,10 @@ SAT_returnState start_gs_scheduler_service(void *param) {
     for (;;) {
         csp_conn_t *conn;
         csp_packet_t *packet;
-        continue;
+
         if ((conn = csp_accept(sock, CSP_MAX_TIMEOUT)) == NULL) {
             /* timeout */
-            ex2_log("woke up");
+            //ex2_log("woke up");
             continue;
         }
         //TODO: is a watchdog needed?

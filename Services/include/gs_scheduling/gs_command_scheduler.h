@@ -32,6 +32,7 @@
 #include <ctype.h>
 #include "rtcmk.h"
 #include "csp_types.h"
+#include "csp_buffer.h"
 #include "ex2_time.h"
 #include "semphr.h"
 #include "services.h"
@@ -43,7 +44,7 @@
 #include "logger.h"
 
 #define MAX_NUM_CMDS 2
-#define MAX_CMD_LENGTH 50 //TODO: review max cmd length required w mission design/ gs
+//#define MAX_CMD_LENGTH 50 //TODO: review max cmd length required w mission design/ gs
 #define MAX_BUFFER_LENGTH 500
 #define ASTERISK                                                                                                  \
     255 //'*' is binary 42 in ASCII.
@@ -72,7 +73,8 @@ extern int delay_aborted;
 typedef struct __attribute__((packed)) {
     // TODO: determine if second accuracy is needed
     tmElements_t scheduled_time;
-    char gs_command[MAX_CMD_LENGTH]; // place holder for storing commands, increase/decrease size as needed
+    //char gs_command[MAX_CMD_LENGTH]; // place holder for storing commands, increase/decrease size as needed
+    csp_packet_t *embedded_packet;
 } scheduled_commands_t;
 
 typedef struct __attribute__((packed)) {
