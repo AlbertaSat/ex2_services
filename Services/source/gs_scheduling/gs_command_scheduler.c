@@ -358,11 +358,11 @@ int prv_set_gs_scheduler(char *cmd_buff, scheduled_commands_t *cmds) {
 
         /*-----------------------Fetch gs command as am embedded CSP packet-----------------------*/
         //Extract the embedded CSP packet
-        (cmds + number_of_cmds)->embedded_packet = csp_buffer_clone(packet);
+        (cmds + number_of_cmds)->embedded_packet = csp_buffer_clone(&cmd_buff[str_position_2]);
 
         //Increment the pointers to read the next line of commands
-        int data_len = (int)packet->length;
-        int total_csp_len = sizeof(packet->padding) + sizeof(packet->length) + sizeof(packet->id) + data_len;
+        int data_len = (int)(cmds + number_of_cmds)->embedded_packet->length;
+        int total_csp_len = sizeof((cmds + number_of_cmds)->embedded_packet->padding) + sizeof((cmds + number_of_cmds)->embedded_packet->length) + sizeof((cmds + number_of_cmds)->embedded_packet->id) + data_len;
         str_position_2 += total_csp_len;
         old_str_position = str_position_2;
         str_position_1 = str_position_2;
@@ -441,7 +441,9 @@ SAT_returnState calc_cmd_frequency(scheduled_commands_t *cmds, int number_of_cmd
                     ex2_log("Error: unable to make time using makeTime\n");
                     // TODO: delete this cmd if makeTime fails
                 }
-                memcpy((non_reoccurring_cmds+j_non_rep)->gs_command, (cmds+j)->gs_command, MAX_CMD_LENGTH);
+
+                // Copy the address of the embedded CSP packet to the non_reoccurring_cmds list
+                memcpy((non_reoccurring_cmds+j_non_rep)->embedded_packet, (cmds+j)->embedded_packet, sizeof((cmds+j)->embedded_packet));
                 (non_reoccurring_cmds+j_non_rep)->frequency = 0; //set frequency to zero for non-repetitive cmds
                 j_non_rep++;
             }
@@ -466,7 +468,7 @@ SAT_returnState calc_cmd_frequency(scheduled_commands_t *cmds, int number_of_cmd
     for (int j=0; j < j_rep; j++) {
         time_buff.Wday = (reoccurring_cmds+j)->scheduled_time.Wday;
         time_buff.Month = (reoccurring_cmds+j)->scheduled_time.Month;
-        memcpy((repeated_cmds_buff+j)->gs_command,(reoccurring_cmds+j)->gs_command,sizeof((repeated_cmds_buff+j)->gs_command));
+        memcpy((repeated_cmds_buff+j)->embedded_packet,(reoccurring_cmds+j)->embedded_packet,sizeof((repeated_cmds_buff+j)->embedded_packet));
         // If command repeats every second
         if ((reoccurring_cmds+j)->scheduled_time.Hour == ASTERISK && (reoccurring_cmds+j)->scheduled_time.Minute == ASTERISK && (reoccurring_cmds+j)->scheduled_time.Second == ASTERISK) {
             //TODO: consider edge cases where the hour increases as soon as this function is executed - complete
@@ -638,28 +640,28 @@ SAT_returnState start_gs_scheduler_service(void *param) {
     //memcpy(test_cmd->data, test_command, sizeof(test_command));
     //char *test_cmd = "050 1 2 3 24 2 52   obc.time_management.get_time()\n 12 * * 14 2 2 52 obc.time_management.get_time()\n ";
     char *test_cmd = "test string\n ";
-    uint8_t test_subservice = 11;
-    uint32_t test_cmd_int = 1646289251;
-    csp_packet_t *packet = csp_buffer_get(5);
-    //unsigned int count = 0;
-    //snprintf((char *) packet->data, csp_buffer_data_size(), "Hello World (%u)", ++count);
-    memcpy(&packet->data[SUBSERVICE_BYTE],&test_subservice, sizeof(test_subservice));
-    memcpy(packet->data+1, &test_cmd_int, sizeof(test_cmd_int));
-    //packet->length = (strlen((char *) packet->data) + 1); /* include the 0 termination */
-    packet->length = (5); /* include the 0 termination */
-    ex2_log("timer started");
-    vTaskDelay(5000);
-    ex2_log("timer called again");
-    vTaskDelay(3000);
-    ex2_log("timer called again");
-
-    csp_conn_t *connect;
-    connect = csp_connect(CSP_PRIO_NORM,  1,  8, CSP_MAX_TIMEOUT, CSP_SO_NONE);
-    int send_packet_test = csp_send(connect, packet, CSP_MAX_TIMEOUT);
-    int read_packet_test = csp_read(connect, CSP_MAX_TIMEOUT);
-    int check_status = packet->data[STATUS_BYTE];
-    int close_connection_test = csp_close(connect);
+//    uint8_t test_subservice = 11;
+//    uint32_t test_cmd_int = 1646289251;
+//    csp_packet_t *packet = csp_buffer_get(5);
+//    //unsigned int count = 0;
+//    //snprintf((char *) packet->data, csp_buffer_data_size(), "Hello World (%u)", ++count);
+//    memcpy(&packet->data[SUBSERVICE_BYTE],&test_subservice, sizeof(test_subservice));
+//    memcpy(packet->data+1, &test_cmd_int, sizeof(test_cmd_int));
+//    //packet->length = (strlen((char *) packet->data) + 1); /* include the 0 termination */
+//    packet->length = (5); /* include the 0 termination */
+//    ex2_log("timer started");
+//    vTaskDelay(5000);
+//    ex2_log("timer called again");
+//    vTaskDelay(3000);
+//    ex2_log("timer called again");
 //
+//    csp_conn_t *connect;
+//    connect = csp_connect(CSP_PRIO_NORM,  1,  8, CSP_MAX_TIMEOUT, CSP_SO_NONE);
+//    int send_packet_test = csp_send(connect, packet, CSP_MAX_TIMEOUT);
+//    int read_packet_test = csp_read(connect, CSP_MAX_TIMEOUT);
+//    int check_status = packet->data[STATUS_BYTE];
+//    int close_connection_test = csp_close(connect);
+////
 //    //int csp_test = csp_sendto(CSP_PRIO_NORM, packet->id.dst, packet->id.dport, 0, CSP_O_NONE, packet->data, CSP_MAX_TIMEOUT);
 //    //int csp_test = csp_sendto(CSP_PRIO_NORM, 1, 8, 255, CSP_O_RDP, packet->data32, CSP_MAX_TIMEOUT);
 //    //CSP_PRIO_NORM, address, dport, 0, CSP_O_NONE, packet, CSP_SEND_TIMEOUT
@@ -719,7 +721,7 @@ SAT_returnState start_gs_scheduler_service(void *param) {
         return SATR_ERROR;
     }
     
-    gs_cmds_scheduler_service_app(test_cmd);
+//    gs_cmds_scheduler_service_app(test_cmd);
 
     //char *test_cmd = "50 1 2 3 24 2 52       obc.time_management.get_time()\n 12 * 13 14 2 2 52 obc.time_management.get_time()\n ";
 //    int test_scanf = 0;

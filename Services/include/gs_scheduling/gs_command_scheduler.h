@@ -81,7 +81,8 @@ typedef struct __attribute__((packed)) {
     // TODO: determine if second accuracy is needed
     uint32_t unix_time;
     uint32_t frequency; //frequency the cmd needs to be executed in seconds, value of 0 means the cmd is not repeated
-    char gs_command[MAX_CMD_LENGTH]; // place holder for storing commands, increase/decrease size as needed
+    //char gs_command[MAX_CMD_LENGTH]; // place holder for storing commands, increase/decrease size as needed
+    csp_packet_t *embedded_packet;
 } scheduled_commands_unix_t;
 
 typedef struct __attribute__((packed)) {
@@ -94,8 +95,8 @@ static number_of_cmds_t num_of_cmds;
 
 typedef enum { SET_SCHEDULE = 48, GET_SCHEDULE = 49 } Scheduler_Subtype;
 
-//SAT_returnState gs_cmds_scheduler_service_app(csp_packet_t *gs_cmds);
-SAT_returnState gs_cmds_scheduler_service_app(char *gs_cmds);
+SAT_returnState gs_cmds_scheduler_service_app(csp_packet_t *gs_cmds);
+//SAT_returnState gs_cmds_scheduler_service_app(char *gs_cmds);
 SAT_returnState start_gs_scheduler_service(void *param);
 SAT_returnState get_scheduled_gs_command();
 SAT_returnState calc_cmd_frequency(scheduled_commands_t* cmds, int number_of_cmds, scheduled_commands_unix_t *sorted_cmds);
